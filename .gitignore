@@ -1,0 +1,6 @@
+node_modules/
+vendor/
+.env
+*.sqlite
+/backend-app/
+/frontend-app/
