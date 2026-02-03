@@ -33,7 +33,7 @@
 medical-manage-smart/
 ├── backend/
 │   └── database/
-│       └── migrations/          # 8 migration files defining 48+ tables
+│       └── migrations/          # 8 migration files defining 50+ tables
 │           ├── *_create_employees_table.php      # HR core
 │           ├── *_create_contracts_table.php      # Contract types
 │           ├── *_create_inventory_tables.php     # Smart inventory
@@ -90,10 +90,11 @@ medical-manage-smart/
 - **Routes:** `/settings/*` (5 routes)
 
 ### 7. Leave Management Module (وحدة الإجازات)
-- **Tables:** `leave_types`, `leave_balances`, `leave_requests`, `leave_approvals`, `leave_policies`, `leave_balance_adjustments`, `public_holidays`, `department_leave_settings`
+- **Tables:** `leave_types`, `leave_balances`, `leave_requests`, `leave_approvals`, `leave_policies`, `leave_balance_adjustments`, `public_holidays`, `department_leave_settings`, `leave_approval_workflows`, `employee_approvers`
 - **Features:**
   - 12 leave categories (annual, sick, emergency, unpaid, maternity, paternity, hajj, marriage, bereavement, study, compensatory, other)
-  - Multi-level approval workflow (Manager → HR → Department Head)
+  - Multi-level approval workflow with recommendation/approval separation
+  - Separate workflow for doctors (Medical Director) vs employees (Admin Manager)
   - Balance tracking with carry-over support
   - Saudi labor law compliance (21 days minimum annual leave)
   - Department-level concurrent leave limits
@@ -102,29 +103,54 @@ medical-manage-smart/
   - Public holidays management (Gregorian & Hijri calendars)
 - **Routes:** `/leaves/*` (planned)
 
-#### Leave Workflow
+#### Leave Workflow - Employee Types
+
+**للموظفين الإداريين (Administrative Staff):**
 ```
-طلب الإجازة:
-┌──────────┐   ┌──────────────┐   ┌─────────────┐   ┌──────────┐
-│  مسودة   │──▶│ المدير       │──▶│ الموارد     │──▶│ معتمدة   │
-│  draft   │   │ المباشر      │   │ البشرية    │   │ approved │
-└──────────┘   │pending_manager│   │ pending_hr │   └──────────┘
-               └──────────────┘   └─────────────┘
-                     │                   │
-                     ▼                   ▼
-               ┌──────────┐        ┌──────────┐
-               │ مرفوضة   │        │ مرفوضة   │
-               │ rejected │        │ rejected │
-               └──────────┘        └──────────┘
+┌──────────┐   ┌──────────────┐   ┌──────────────┐   ┌───────────┐   ┌──────────┐
+│  مسودة   │──▶│ المدير       │──▶│ المدير       │──▶│ الموارد   │──▶│ معتمدة   │
+│  draft   │   │ المباشر      │   │ الإداري     │   │ البشرية  │   │ approved │
+└──────────┘   │  (توصية)     │   │  (اعتماد)   │   │          │   └──────────┘
+               │ recommend    │   │  approve    │   │          │
+               └──────────────┘   └──────────────┘   └───────────┘
 ```
+
+**للأطباء (Doctors):**
+```
+┌──────────┐   ┌──────────────┐   ┌──────────────┐   ┌───────────┐   ┌──────────┐
+│  مسودة   │──▶│ المدير       │──▶│ المدير       │──▶│ الموارد   │──▶│ معتمدة   │
+│  draft   │   │ المباشر      │   │ الطبي       │   │ البشرية  │   │ approved │
+└──────────┘   │  (توصية)     │   │  (اعتماد)   │   │          │   └──────────┘
+               │ recommend    │   │  approve    │   │          │
+               └──────────────┘   └──────────────┘   └───────────┘
+```
+
+**للإجازات الطويلة (≥15 يوم):**
+```
+┌──────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌───────────┐   ┌──────────┐
+│  مسودة   │──▶│ المدير       │──▶│ المدير       │──▶│ المدير       │──▶│ الموارد   │──▶│ معتمدة   │
+│  draft   │   │ المباشر      │   │الإداري/الطبي│   │ العام       │   │ البشرية  │   │ approved │
+└──────────┘   │  (توصية)     │   │  (توصية)    │   │  (اعتماد)   │   │          │   └──────────┘
+               └──────────────┘   └──────────────┘   └──────────────┘   └───────────┘
+```
+
+#### Approval Roles (أدوار الموافقة)
+
+| الدور | النوع | المسؤولية |
+|-------|-------|-----------|
+| **المدير المباشر** | توصية | مراجعة الطلب والتوصية بالموافقة/الرفض |
+| **المدير الإداري** | اعتماد | اعتماد إجازات الموظفين غير الطبيين |
+| **المدير الطبي** | اعتماد | اعتماد إجازات الأطباء والكادر الطبي |
+| **المدير العام** | اعتماد | اعتماد الإجازات الطويلة (≥15 يوم) |
+| **الموارد البشرية** | توثيق | التحقق النهائي وتحديث الأرصدة |
 
 #### HR Employee Role in Leave Cycle (دور موظف الموارد البشرية)
 1. **Balance Verification (التحقق من الرصيد):** Confirm sufficient leave balance exists
 2. **Policy Compliance (مطابقة السياسات):** Ensure request meets company policies and labor law
 3. **Conflict Check (فحص التعارض):** Verify no department coverage issues
-4. **Approval/Rejection (الموافقة/الرفض):** Approve or reject with documented reason
-5. **Documentation (التوثيق):** Update employee records and balance
-6. **Payroll Integration (الربط بالرواتب):** Flag unpaid leave for salary deduction
+4. **Final Documentation (التوثيق النهائي):** Update employee records and balance after approvals
+5. **Payroll Integration (الربط بالرواتب):** Flag unpaid leave for salary deduction
+6. **Workflow Routing (توجيه الطلب):** Ensure request goes to correct approver based on employee type
 
 ---
 
@@ -202,7 +228,8 @@ Payroll:    draft → approved → paid
 Claims:     submitted → scrubbed → approved → paid → rejected
 Clearance:  pending → finance_approved → hr_approved → it_approved → custody_cleared → completed
 Purchase:   pending → manager_approved → finance_approved → ceo_approved → completed
-Leave:      draft → pending_manager → pending_hr → approved → in_progress → completed
+Leave (Staff):   draft → pending_manager → pending_admin_manager → pending_hr → approved → in_progress → completed
+Leave (Doctors): draft → pending_manager → pending_medical_director → pending_hr → approved → in_progress → completed
 ```
 
 ---
@@ -338,11 +365,11 @@ frontend/src/
 - Implement proper error handling with user-friendly messages
 
 ### What's Currently Implemented
-- Complete database schema (48+ tables including Leave Management)
+- Complete database schema (50+ tables including Leave Management)
 - Frontend routing structure (24 lazy-loaded pages)
 - Docker containerization with all services
 - Authentication architecture
-- Leave management module with full workflow support
+- Leave management module with role-based approval workflow (Admin Manager for staff, Medical Director for doctors)
 
 ### What Needs Implementation
 - Backend API controllers and services
