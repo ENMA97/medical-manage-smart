@@ -33,14 +33,15 @@
 medical-manage-smart/
 ├── backend/
 │   └── database/
-│       └── migrations/          # 7 migration files defining 40+ tables
+│       └── migrations/          # 8 migration files defining 48+ tables
 │           ├── *_create_employees_table.php      # HR core
 │           ├── *_create_contracts_table.php      # Contract types
 │           ├── *_create_inventory_tables.php     # Smart inventory
 │           ├── *_create_finance_tables.php       # Finance & BI
 │           ├── *_create_roster_tables.php        # Smart rostering
 │           ├── *_create_payroll_tables.php       # Payroll module
-│           └── *_create_system_tables.php        # System management
+│           ├── *_create_system_tables.php        # System management
+│           └── *_create_leave_tables.php         # Leave management
 │
 ├── frontend/
 │   └── src/
@@ -87,6 +88,43 @@ medical-manage-smart/
 - **Tables:** `roles`, `permissions`, `role_permissions`, `user_roles`, `audit_logs`, `integration_configs`, `notifications`, `system_settings`, `purchase_requests`, `workflow_logs`
 - **Features:** Bilingual RBAC, immutable audit logging, multi-step approvals
 - **Routes:** `/settings/*` (5 routes)
+
+### 7. Leave Management Module (وحدة الإجازات)
+- **Tables:** `leave_types`, `leave_balances`, `leave_requests`, `leave_approvals`, `leave_policies`, `leave_balance_adjustments`, `public_holidays`, `department_leave_settings`
+- **Features:**
+  - 12 leave categories (annual, sick, emergency, unpaid, maternity, paternity, hajj, marriage, bereavement, study, compensatory, other)
+  - Multi-level approval workflow (Manager → HR → Department Head)
+  - Balance tracking with carry-over support
+  - Saudi labor law compliance (21 days minimum annual leave)
+  - Department-level concurrent leave limits
+  - Blackout periods and peak season restrictions
+  - Integration with payroll for unpaid leave deductions
+  - Public holidays management (Gregorian & Hijri calendars)
+- **Routes:** `/leaves/*` (planned)
+
+#### Leave Workflow
+```
+طلب الإجازة:
+┌──────────┐   ┌──────────────┐   ┌─────────────┐   ┌──────────┐
+│  مسودة   │──▶│ المدير       │──▶│ الموارد     │──▶│ معتمدة   │
+│  draft   │   │ المباشر      │   │ البشرية    │   │ approved │
+└──────────┘   │pending_manager│   │ pending_hr │   └──────────┘
+               └──────────────┘   └─────────────┘
+                     │                   │
+                     ▼                   ▼
+               ┌──────────┐        ┌──────────┐
+               │ مرفوضة   │        │ مرفوضة   │
+               │ rejected │        │ rejected │
+               └──────────┘        └──────────┘
+```
+
+#### HR Employee Role in Leave Cycle (دور موظف الموارد البشرية)
+1. **Balance Verification (التحقق من الرصيد):** Confirm sufficient leave balance exists
+2. **Policy Compliance (مطابقة السياسات):** Ensure request meets company policies and labor law
+3. **Conflict Check (فحص التعارض):** Verify no department coverage issues
+4. **Approval/Rejection (الموافقة/الرفض):** Approve or reject with documented reason
+5. **Documentation (التوثيق):** Update employee records and balance
+6. **Payroll Integration (الربط بالرواتب):** Flag unpaid leave for salary deduction
 
 ---
 
@@ -164,6 +202,7 @@ Payroll:    draft → approved → paid
 Claims:     submitted → scrubbed → approved → paid → rejected
 Clearance:  pending → finance_approved → hr_approved → it_approved → custody_cleared → completed
 Purchase:   pending → manager_approved → finance_approved → ceo_approved → completed
+Leave:      draft → pending_manager → pending_hr → approved → in_progress → completed
 ```
 
 ---
@@ -223,6 +262,17 @@ frontend/src/
 - **Clawback:** Commission adjustments for rejected insurance claims
 - **WPS:** Wage Protection System compliance required
 - **Contracts:** Support 5 types with different calculation rules
+
+### Leave Management
+- **Annual Leave:** Minimum 21 days per year (Saudi Labor Law)
+- **Sick Leave:** Requires medical certificate attachment
+- **Hajj Leave:** Once during employment, 10-15 days
+- **Maternity:** 70 days (10 weeks) fully paid
+- **Balance Carry-over:** Configurable per leave type
+- **Concurrent Limits:** Department-level restrictions on simultaneous leaves
+- **Blackout Periods:** Prevent leaves during critical periods
+- **Advance Notice:** Configurable notice period per leave type
+- **Delegation:** Require delegate assignment for certain positions
 
 ### Finance
 - **ABC Costing:** Cost allocation to cost centers
@@ -288,10 +338,11 @@ frontend/src/
 - Implement proper error handling with user-friendly messages
 
 ### What's Currently Implemented
-- Complete database schema (40+ tables)
+- Complete database schema (48+ tables including Leave Management)
 - Frontend routing structure (24 lazy-loaded pages)
 - Docker containerization with all services
 - Authentication architecture
+- Leave management module with full workflow support
 
 ### What Needs Implementation
 - Backend API controllers and services
