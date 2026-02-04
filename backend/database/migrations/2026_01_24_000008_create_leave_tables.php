@@ -190,21 +190,38 @@ return new class extends Migration
                 'draft',                    // مسودة
                 'pending_admin_manager',    // بانتظار اعتماد المدير الإداري
                 'pending_medical_director', // بانتظار اعتماد المدير الطبي (للأطباء)
-                'pending_general_manager',  // بانتظار اعتماد المدير العام
+                'pending_general_manager',  // بانتظار اعتماد المدير العام (اختياري)
                 'approved',                 // معتمد
                 'rejected'                  // مرفوض
             ])->default('draft');
+
+            // خيار تحويل للمدير العام
+            $table->boolean('requires_gm_approval')->default(false);  // هل يتطلب موافقة المدير العام؟
+            $table->boolean('forwarded_to_gm')->default(false);       // هل تم تحويله للمدير العام؟
+            $table->text('forward_reason')->nullable();               // سبب التحويل للمدير العام
+
             $table->uuid('created_by');
+
+            // اعتماد المدير الإداري (للموظفين)
+            $table->enum('admin_manager_action', ['approved', 'rejected', 'forwarded_to_gm'])->nullable();
             $table->timestamp('admin_manager_action_at')->nullable();
             $table->uuid('admin_manager_id')->nullable();
             $table->text('admin_manager_comment')->nullable();
+
+            // اعتماد المدير الطبي (للأطباء)
+            $table->enum('medical_director_action', ['approved', 'rejected', 'forwarded_to_gm'])->nullable();
             $table->timestamp('medical_director_action_at')->nullable();
             $table->uuid('medical_director_id')->nullable();
             $table->text('medical_director_comment')->nullable();
+
+            // اعتماد المدير العام (اختياري - حسب الحاجة)
+            $table->enum('general_manager_action', ['approved', 'rejected'])->nullable();
             $table->timestamp('general_manager_action_at')->nullable();
             $table->uuid('general_manager_id')->nullable();
             $table->text('general_manager_comment')->nullable();
+
             $table->timestamp('final_approved_at')->nullable();
+            $table->uuid('final_approved_by')->nullable();
             $table->timestamps();
 
             $table->foreign('leave_request_id')->references('id')->on('leave_requests');
@@ -212,6 +229,7 @@ return new class extends Migration
             $table->foreign('admin_manager_id')->references('id')->on('users');
             $table->foreign('medical_director_id')->references('id')->on('users');
             $table->foreign('general_manager_id')->references('id')->on('users');
+            $table->foreign('final_approved_by')->references('id')->on('users');
 
             $table->index('status');
         });
@@ -343,18 +361,23 @@ return new class extends Migration
             /*
              * للموظفين الإداريين:
              * [
-             *   {"sequence": 1, "type": "admin_manager", "action": "approval", "required": true},
-             *   {"sequence": 2, "type": "general_manager", "action": "approval", "required": true}
+             *   {"sequence": 1, "type": "admin_manager", "action": "approval", "required": true, "can_forward_to_gm": true},
+             *   {"sequence": 2, "type": "general_manager", "action": "approval", "required": false}
              * ]
              *
              * للأطباء والكادر الطبي:
              * [
-             *   {"sequence": 1, "type": "medical_director", "action": "approval", "required": true},
-             *   {"sequence": 2, "type": "general_manager", "action": "approval", "required": true}
+             *   {"sequence": 1, "type": "medical_director", "action": "approval", "required": true, "can_forward_to_gm": true},
+             *   {"sequence": 2, "type": "general_manager", "action": "approval", "required": false}
              * ]
+             *
+             * ملاحظة: المدير الإداري/الطبي يمكنه:
+             * 1. الاعتماد مباشرة (approved) - القرار نهائي
+             * 2. التحويل للمدير العام (forwarded_to_gm) - حسب الحاجة
+             * 3. الرفض (rejected)
              */
 
-            $table->boolean('requires_gm_for_all')->default(true);  // المدير العام يعتمد جميع الإجازات
+            $table->boolean('gm_approval_optional')->default(true);  // موافقة المدير العام اختيارية
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
