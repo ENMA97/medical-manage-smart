@@ -71,7 +71,7 @@ return new class extends Migration
             $table->index(['employee_id', 'year']);
         });
 
-        // طلبات الإجازة
+        // طلبات الإجازة (المرحلة الأولى: نموذج الطلب)
         Schema::create('leave_requests', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('request_number')->unique();
@@ -86,22 +86,31 @@ return new class extends Migration
             $table->text('reason_ar')->nullable();
             $table->string('contact_during_leave')->nullable();      // رقم التواصل أثناء الإجازة
             $table->string('address_during_leave')->nullable();      // العنوان أثناء الإجازة
-            $table->uuid('delegate_employee_id')->nullable();        // المفوض أثناء الغياب
+
+            // القائم بالعمل والمهام الوظيفية
+            $table->uuid('delegate_employee_id')->nullable();        // القائم بالعمل أثناء الغياب
+            $table->text('job_tasks')->nullable();                   // المهام الوظيفية المسندة للقائم بالعمل
+            $table->text('job_tasks_ar')->nullable();
+            $table->boolean('delegate_confirmed')->default(false);   // تأكيد القائم بالعمل
+            $table->timestamp('delegate_confirmed_at')->nullable();
+
+            // حالة نموذج الطلب
             $table->enum('status', [
                 'draft',                    // مسودة
-                'pending_manager',          // بانتظار توصية المدير المباشر
-                'pending_admin_manager',    // بانتظار اعتماد المدير الإداري (للموظفين)
-                'pending_medical_director', // بانتظار اعتماد المدير الطبي (للأطباء)
-                'pending_hr',               // بانتظار الموارد البشرية
-                'pending_department_head',  // بانتظار رئيس القسم
-                'pending_general_manager',  // بانتظار المدير العام
-                'approved',                 // معتمدة
+                'pending_supervisor',       // بانتظار توصية المشرف المباشر
+                'pending_admin_manager',    // بانتظار موافقة المدير الإداري
+                'pending_hr',               // بانتظار تعميد الموارد البشرية
+                'pending_delegate',         // بانتظار اعتماد القائم بالعمل
+                'form_completed',           // اكتمل النموذج - جاهز لإنشاء القرار
+                'decision_pending',         // قرار الإجازة قيد الاعتماد
+                'approved',                 // معتمدة نهائياً
                 'rejected',                 // مرفوضة
                 'cancelled',                // ملغاة
                 'in_progress',              // جارية (الموظف في إجازة)
                 'completed',                // منتهية
                 'cut_short'                 // مقطوعة (عودة مبكرة)
             ])->default('draft');
+
             $table->date('actual_return_date')->nullable();          // تاريخ العودة الفعلي
             $table->decimal('actual_days_taken', 5, 2)->nullable();  // الأيام الفعلية
             $table->text('cancellation_reason')->nullable();
@@ -123,35 +132,38 @@ return new class extends Migration
             $table->index('status');
         });
 
-        // سلسلة الموافقات على الإجازات
+        // سلسلة الموافقات على نموذج الطلب (المرحلة الأولى)
         Schema::create('leave_approvals', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->uuid('leave_request_id');
             $table->integer('sequence')->default(1);                  // ترتيب الموافقة
             $table->enum('approver_type', [
-                'direct_manager',           // المدير المباشر (توصية)
-                'admin_manager',            // المدير الإداري (اعتماد للموظفين)
-                'medical_director',         // المدير الطبي (اعتماد للأطباء)
+                'supervisor',               // المشرف المباشر (توصية)
+                'admin_manager',            // المدير الإداري (موافقة)
+                'hr_officer',               // موظف الموارد البشرية (تعميد)
+                'delegate',                 // القائم بالعمل (اعتماد التغطية)
                 'department_head',          // رئيس القسم
-                'hr_officer',               // موظف الموارد البشرية
-                'hr_manager',               // مدير الموارد البشرية
-                'general_manager',          // المدير العام
-                'delegate'                  // مفوض
+                'hr_manager'                // مدير الموارد البشرية
             ]);
             $table->enum('action_type', [
-                'recommendation',           // توصية (المدير المباشر)
-                'approval'                  // اعتماد (المدير الإداري/الطبي)
+                'recommendation',           // توصية (المشرف)
+                'approval',                 // موافقة (المدير الإداري)
+                'endorsement',              // تعميد (الموارد البشرية)
+                'coverage_confirmation'     // اعتماد التغطية (القائم بالعمل)
             ])->default('approval');
             $table->uuid('approver_id');
             $table->enum('status', [
                 'pending',      // بانتظار
-                'recommended',  // موصى به (للتوصيات)
-                'approved',     // معتمد
+                'recommended',  // موصى به
+                'approved',     // موافق عليه
+                'endorsed',     // معتمد (للتعميد)
+                'confirmed',    // مؤكد (للقائم بالعمل)
                 'rejected',     // مرفوض
                 'skipped'       // تم تجاوزه
             ])->default('pending');
             $table->text('comment')->nullable();
             $table->text('comment_ar')->nullable();
+            $table->text('job_tasks_assigned')->nullable();           // المهام المسندة (يملأها المشرف)
             $table->timestamp('action_at')->nullable();
             $table->string('ip_address')->nullable();
             $table->timestamps();
@@ -161,6 +173,47 @@ return new class extends Migration
 
             $table->unique(['leave_request_id', 'sequence']);
             $table->index(['approver_id', 'status']);
+        });
+
+        // قرارات الإجازة (المرحلة الثانية)
+        Schema::create('leave_decisions', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('decision_number')->unique();              // رقم القرار
+            $table->uuid('leave_request_id');
+            $table->enum('employee_type', [
+                'doctor',                   // طبيب
+                'medical_staff',            // كادر طبي
+                'administrative',           // إداري
+                'other'                     // أخرى
+            ]);
+            $table->enum('status', [
+                'draft',                    // مسودة
+                'pending_admin_manager',    // بانتظار اعتماد المدير الإداري
+                'pending_medical_director', // بانتظار اعتماد المدير الطبي (للأطباء)
+                'pending_general_manager',  // بانتظار اعتماد المدير العام
+                'approved',                 // معتمد
+                'rejected'                  // مرفوض
+            ])->default('draft');
+            $table->uuid('created_by');
+            $table->timestamp('admin_manager_action_at')->nullable();
+            $table->uuid('admin_manager_id')->nullable();
+            $table->text('admin_manager_comment')->nullable();
+            $table->timestamp('medical_director_action_at')->nullable();
+            $table->uuid('medical_director_id')->nullable();
+            $table->text('medical_director_comment')->nullable();
+            $table->timestamp('general_manager_action_at')->nullable();
+            $table->uuid('general_manager_id')->nullable();
+            $table->text('general_manager_comment')->nullable();
+            $table->timestamp('final_approved_at')->nullable();
+            $table->timestamps();
+
+            $table->foreign('leave_request_id')->references('id')->on('leave_requests');
+            $table->foreign('created_by')->references('id')->on('users');
+            $table->foreign('admin_manager_id')->references('id')->on('users');
+            $table->foreign('medical_director_id')->references('id')->on('users');
+            $table->foreign('general_manager_id')->references('id')->on('users');
+
+            $table->index('status');
         });
 
         // سياسات الإجازات حسب نوع العقد
@@ -267,29 +320,41 @@ return new class extends Migration
             $table->string('name_ar');
             $table->enum('employee_type', [
                 'doctor',               // طبيب
-                'nurse',                // تمريض
-                'technician',           // فني
+                'medical_staff',        // كادر طبي (تمريض، فني)
                 'administrative',       // إداري
                 'support',              // خدمات مساندة
                 'management'            // إدارة
             ]);
-            $table->json('approval_chain');  // سلسلة الموافقات بالترتيب
+
+            // سلسلة موافقات نموذج الطلب (المرحلة الأولى)
+            $table->json('request_approval_chain');
             /*
-             * مثال للموظفين الإداريين:
+             * سلسلة نموذج الطلب لجميع الموظفين:
              * [
-             *   {"sequence": 1, "type": "direct_manager", "action": "recommendation", "required": true},
+             *   {"sequence": 1, "type": "supervisor", "action": "recommendation", "required": true},
              *   {"sequence": 2, "type": "admin_manager", "action": "approval", "required": true},
-             *   {"sequence": 3, "type": "hr_officer", "action": "approval", "required": true}
-             * ]
-             *
-             * مثال للأطباء:
-             * [
-             *   {"sequence": 1, "type": "direct_manager", "action": "recommendation", "required": true},
-             *   {"sequence": 2, "type": "medical_director", "action": "approval", "required": true},
-             *   {"sequence": 3, "type": "hr_officer", "action": "approval", "required": true}
+             *   {"sequence": 3, "type": "hr_officer", "action": "endorsement", "required": true},
+             *   {"sequence": 4, "type": "delegate", "action": "coverage_confirmation", "required": true}
              * ]
              */
-            $table->integer('min_days_for_gm')->default(15);  // الحد الأدنى للأيام التي تتطلب موافقة المدير العام
+
+            // سلسلة موافقات قرار الإجازة (المرحلة الثانية)
+            $table->json('decision_approval_chain');
+            /*
+             * للموظفين الإداريين:
+             * [
+             *   {"sequence": 1, "type": "admin_manager", "action": "approval", "required": true},
+             *   {"sequence": 2, "type": "general_manager", "action": "approval", "required": true}
+             * ]
+             *
+             * للأطباء والكادر الطبي:
+             * [
+             *   {"sequence": 1, "type": "medical_director", "action": "approval", "required": true},
+             *   {"sequence": 2, "type": "general_manager", "action": "approval", "required": true}
+             * ]
+             */
+
+            $table->boolean('requires_gm_for_all')->default(true);  // المدير العام يعتمد جميع الإجازات
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
@@ -329,6 +394,7 @@ return new class extends Migration
         Schema::dropIfExists('public_holidays');
         Schema::dropIfExists('leave_balance_adjustments');
         Schema::dropIfExists('leave_policies');
+        Schema::dropIfExists('leave_decisions');
         Schema::dropIfExists('leave_approvals');
         Schema::dropIfExists('leave_requests');
         Schema::dropIfExists('leave_balances');

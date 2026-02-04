@@ -90,67 +90,69 @@ medical-manage-smart/
 - **Routes:** `/settings/*` (5 routes)
 
 ### 7. Leave Management Module (وحدة الإجازات)
-- **Tables:** `leave_types`, `leave_balances`, `leave_requests`, `leave_approvals`, `leave_policies`, `leave_balance_adjustments`, `public_holidays`, `department_leave_settings`, `leave_approval_workflows`, `employee_approvers`
+- **Tables:** `leave_types`, `leave_balances`, `leave_requests`, `leave_approvals`, `leave_decisions`, `leave_policies`, `leave_balance_adjustments`, `public_holidays`, `department_leave_settings`, `leave_approval_workflows`, `employee_approvers`
 - **Features:**
+  - Two-phase approval: Request Form + Leave Decision
   - 12 leave categories (annual, sick, emergency, unpaid, maternity, paternity, hajj, marriage, bereavement, study, compensatory, other)
-  - Multi-level approval workflow with recommendation/approval separation
-  - Separate workflow for doctors (Medical Director) vs employees (Admin Manager)
+  - Job tasks handover and delegate confirmation
+  - Separate decision approval for doctors (Medical Director) vs employees (Admin Manager)
+  - General Manager approval for ALL leaves
   - Balance tracking with carry-over support
   - Saudi labor law compliance (21 days minimum annual leave)
-  - Department-level concurrent leave limits
-  - Blackout periods and peak season restrictions
-  - Integration with payroll for unpaid leave deductions
-  - Public holidays management (Gregorian & Hijri calendars)
 - **Routes:** `/leaves/*` (planned)
 
-#### Leave Workflow - Employee Types
+#### Leave Workflow - Two Phases (مرحلتين)
 
-**للموظفين الإداريين (Administrative Staff):**
+**المرحلة الأولى: نموذج طلب الإجازة (Leave Request Form)**
 ```
-┌──────────┐   ┌──────────────┐   ┌──────────────┐   ┌───────────┐   ┌──────────┐
-│  مسودة   │──▶│ المدير       │──▶│ المدير       │──▶│ الموارد   │──▶│ معتمدة   │
-│  draft   │   │ المباشر      │   │ الإداري     │   │ البشرية  │   │ approved │
-└──────────┘   │  (توصية)     │   │  (اعتماد)   │   │          │   └──────────┘
-               │ recommend    │   │  approve    │   │          │
-               └──────────────┘   └──────────────┘   └───────────┘
-```
-
-**للأطباء (Doctors):**
-```
-┌──────────┐   ┌──────────────┐   ┌──────────────┐   ┌───────────┐   ┌──────────┐
-│  مسودة   │──▶│ المدير       │──▶│ المدير       │──▶│ الموارد   │──▶│ معتمدة   │
-│  draft   │   │ المباشر      │   │ الطبي       │   │ البشرية  │   │ approved │
-└──────────┘   │  (توصية)     │   │  (اعتماد)   │   │          │   └──────────┘
-               │ recommend    │   │  approve    │   │          │
-               └──────────────┘   └──────────────┘   └───────────┘
+┌──────────┐   ┌──────────────┐   ┌──────────────┐   ┌───────────┐   ┌──────────────┐   ┌────────────┐
+│  الموظف  │──▶│ المشرف       │──▶│ المدير       │──▶│ الموارد   │──▶│ القائم       │──▶│ اكتمال     │
+│  ينشئ    │   │ المباشر      │   │ الإداري     │   │ البشرية  │   │ بالعمل      │   │ النموذج   │
+│  الطلب   │   │ (توصية)      │   │ (موافقة)    │   │ (تعميد)   │   │ (اعتماد     │   │            │
+└──────────┘   │ +المهام      │   └──────────────┘   └───────────┘   │  التغطية)   │   └────────────┘
+               │ +القائم      │                                      └──────────────┘
+               └──────────────┘
 ```
 
-**للإجازات الطويلة (≥15 يوم):**
+**المرحلة الثانية: قرار الإجازة (Leave Decision)**
+
+للموظفين الإداريين:
 ```
-┌──────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌───────────┐   ┌──────────┐
-│  مسودة   │──▶│ المدير       │──▶│ المدير       │──▶│ المدير       │──▶│ الموارد   │──▶│ معتمدة   │
-│  draft   │   │ المباشر      │   │الإداري/الطبي│   │ العام       │   │ البشرية  │   │ approved │
-└──────────┘   │  (توصية)     │   │  (توصية)    │   │  (اعتماد)   │   │          │   └──────────┘
-               └──────────────┘   └──────────────┘   └──────────────┘   └───────────┘
+┌────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────┐
+│ إنشاء     │──▶│ المدير       │──▶│ المدير       │──▶│ معتمد    │
+│ القرار    │   │ الإداري     │   │ العام       │   │          │
+└────────────┘   │ (اعتماد)    │   │ (اعتماد)    │   └──────────┘
+                 └──────────────┘   └──────────────┘
+```
+
+للأطباء والكادر الطبي:
+```
+┌────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────┐
+│ إنشاء     │──▶│ المدير       │──▶│ المدير       │──▶│ معتمد    │
+│ القرار    │   │ الطبي       │   │ العام       │   │          │
+└────────────┘   │ (اعتماد)    │   │ (اعتماد)    │   └──────────┘
+                 └──────────────┘   └──────────────┘
 ```
 
 #### Approval Roles (أدوار الموافقة)
 
-| الدور | النوع | المسؤولية |
-|-------|-------|-----------|
-| **المدير المباشر** | توصية | مراجعة الطلب والتوصية بالموافقة/الرفض |
-| **المدير الإداري** | اعتماد | اعتماد إجازات الموظفين غير الطبيين |
-| **المدير الطبي** | اعتماد | اعتماد إجازات الأطباء والكادر الطبي |
-| **المدير العام** | اعتماد | اعتماد الإجازات الطويلة (≥15 يوم) |
-| **الموارد البشرية** | توثيق | التحقق النهائي وتحديث الأرصدة |
+| الدور | المرحلة | النوع | المسؤولية |
+|-------|---------|-------|-----------|
+| **المشرف المباشر** | النموذج | توصية | مراجعة الطلب + تحديد المهام والقائم بالعمل |
+| **المدير الإداري** | النموذج | موافقة | الموافقة على الطلب |
+| **الموارد البشرية** | النموذج | تعميد | التحقق من السياسات والرصيد |
+| **القائم بالعمل** | النموذج | اعتماد | تأكيد استلام المهام والتغطية |
+| **المدير الإداري** | القرار | اعتماد | اعتماد قرار إجازات الموظفين |
+| **المدير الطبي** | القرار | اعتماد | اعتماد قرار إجازات الأطباء |
+| **المدير العام** | القرار | اعتماد | الاعتماد النهائي لجميع الإجازات |
 
 #### HR Employee Role in Leave Cycle (دور موظف الموارد البشرية)
-1. **Balance Verification (التحقق من الرصيد):** Confirm sufficient leave balance exists
-2. **Policy Compliance (مطابقة السياسات):** Ensure request meets company policies and labor law
-3. **Conflict Check (فحص التعارض):** Verify no department coverage issues
-4. **Final Documentation (التوثيق النهائي):** Update employee records and balance after approvals
-5. **Payroll Integration (الربط بالرواتب):** Flag unpaid leave for salary deduction
-6. **Workflow Routing (توجيه الطلب):** Ensure request goes to correct approver based on employee type
+1. **Balance Verification (التحقق من الرصيد):** التأكد من توفر رصيد كافي
+2. **Policy Compliance (مطابقة السياسات):** التحقق من مطابقة نظام العمل والسياسات
+3. **Endorsement (التعميد):** تعميد الطلب بعد موافقة المدير الإداري
+4. **Workflow Routing (توجيه الطلب):** توجيه القرار للمدير المناسب (إداري/طبي)
+5. **Final Documentation (التوثيق):** تحديث السجلات بعد الاعتماد النهائي
+6. **Payroll Integration (الربط بالرواتب):** خصم الإجازات بدون راتب
 
 ---
 
@@ -228,8 +230,8 @@ Payroll:    draft → approved → paid
 Claims:     submitted → scrubbed → approved → paid → rejected
 Clearance:  pending → finance_approved → hr_approved → it_approved → custody_cleared → completed
 Purchase:   pending → manager_approved → finance_approved → ceo_approved → completed
-Leave (Staff):   draft → pending_manager → pending_admin_manager → pending_hr → approved → in_progress → completed
-Leave (Doctors): draft → pending_manager → pending_medical_director → pending_hr → approved → in_progress → completed
+Leave Request:   draft → pending_supervisor → pending_admin_manager → pending_hr → pending_delegate → form_completed
+Leave Decision:  draft → pending_admin_manager/pending_medical_director → pending_general_manager → approved
 ```
 
 ---
