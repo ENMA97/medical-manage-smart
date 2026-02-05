@@ -1,0 +1,68 @@
+# =============================================================================
+# Medical ERP Smart - Git Ignore
+# =============================================================================
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+/vendor
+/node_modules
+frontend/node_modules
+
+# Laravel
+/backend/vendor
+/backend/node_modules
+/backend/storage/*.key
+/backend/.env
+/backend/bootstrap/cache/*
+!backend/bootstrap/cache/.gitkeep
+
+# Frontend build
+frontend/dist
+frontend/.vite
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+/backend/coverage
+/backend/.phpunit.result.cache
+/frontend/coverage
+
+# Docker volumes (local)
+docker/postgres/data
+docker/redis/data
+
+# Compiled files
+*.pyc
+*.pyo
+*.class
+*.o
+*.so
+
+# Temporary files
+*.tmp
+*.temp
+.cache
+
+# Package locks (keep one)
+# package-lock.json
+# yarn.lock
+# composer.lock
