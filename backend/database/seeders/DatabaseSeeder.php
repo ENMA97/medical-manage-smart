@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
      * 4. RosterSeeder - أنماط الورديات (يعتمد على الأقسام)
      * 5. PayrollSeeder - إعدادات الرواتب (بدون تبعيات مباشرة)
      * 6. LeaveSeeder - أنواع الإجازات (يعتمد على الأقسام)
+     * 7. UserSeeder - المستخدم الإداري الأول (يعتمد على الأدوار)
      */
     public function run(): void
     {
@@ -30,28 +31,32 @@ class DatabaseSeeder extends Seeder
         $this->command->info('');
 
         // 1. وحدة النظام (الأدوار والصلاحيات)
-        $this->command->info('📦 [1/6] System Module...');
+        $this->command->info('📦 [1/7] System Module...');
         $this->call(SystemSeeder::class);
 
         // 2. وحدة الموارد البشرية (الأقسام والمناصب)
-        $this->command->info('📦 [2/6] HR Module...');
+        $this->command->info('📦 [2/7] HR Module...');
         $this->call(HRSeeder::class);
 
         // 3. وحدة المخزون (المستودعات والفئات)
-        $this->command->info('📦 [3/6] Inventory Module...');
+        $this->command->info('📦 [3/7] Inventory Module...');
         $this->call(InventorySeeder::class);
 
         // 4. وحدة الجدولة (أنماط الورديات)
-        $this->command->info('📦 [4/6] Roster Module...');
+        $this->command->info('📦 [4/7] Roster Module...');
         $this->call(RosterSeeder::class);
 
         // 5. وحدة الرواتب (الإعدادات)
-        $this->command->info('📦 [5/6] Payroll Module...');
+        $this->command->info('📦 [5/7] Payroll Module...');
         $this->call(PayrollSeeder::class);
 
         // 6. وحدة الإجازات (أنواع الإجازات والسياسات)
-        $this->command->info('📦 [6/6] Leave Module...');
+        $this->command->info('📦 [6/7] Leave Module...');
         $this->call(LeaveSeeder::class);
+
+        // 7. المستخدم الإداري الأول
+        $this->command->info('📦 [7/7] Admin User...');
+        $this->call(UserSeeder::class);
 
         $endTime = microtime(true);
         $duration = round($endTime - $startTime, 2);
@@ -77,6 +82,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('');
 
         $tables = [
+            'users' => 'المستخدمين',
             'permissions' => 'الصلاحيات',
             'roles' => 'الأدوار',
             'departments' => 'الأقسام',
