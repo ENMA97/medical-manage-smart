@@ -197,3 +197,114 @@ Route::prefix('leaves')->middleware(['auth:sanctum'])->group(function () {
             ->name('leave-reports.statistics');
     });
 });
+
+// =============================================================================
+// Payroll Module Routes - مسارات وحدة الرواتب
+// =============================================================================
+
+Route::prefix('payroll')->middleware(['auth:sanctum'])->group(function () {
+
+    // -------------------------------------------------------------------------
+    // Payrolls - مسيرات الرواتب
+    // -------------------------------------------------------------------------
+    Route::prefix('payrolls')->group(function () {
+        // قائمة المسيرات
+        Route::get('/', [\App\Http\Controllers\Api\Payroll\PayrollController::class, 'index'])
+            ->name('payrolls.index');
+
+        // ملخص الفترة
+        Route::get('/period-summary', [\App\Http\Controllers\Api\Payroll\PayrollController::class, 'periodSummary'])
+            ->name('payrolls.period-summary');
+
+        // توليد مسيرات شهرية
+        Route::post('/generate', [\App\Http\Controllers\Api\Payroll\PayrollController::class, 'generate'])
+            ->name('payrolls.generate');
+
+        // اعتماد مجموعة
+        Route::post('/bulk-approve', [\App\Http\Controllers\Api\Payroll\PayrollController::class, 'bulkApprove'])
+            ->name('payrolls.bulk-approve');
+
+        // تفاصيل مسير
+        Route::get('/{payroll}', [\App\Http\Controllers\Api\Payroll\PayrollController::class, 'show'])
+            ->name('payrolls.show');
+
+        // إعادة حساب
+        Route::post('/{payroll}/recalculate', [\App\Http\Controllers\Api\Payroll\PayrollController::class, 'recalculate'])
+            ->name('payrolls.recalculate');
+
+        // اعتماد المسير
+        Route::post('/{payroll}/approve', [\App\Http\Controllers\Api\Payroll\PayrollController::class, 'approve'])
+            ->name('payrolls.approve');
+
+        // تسجيل الدفع
+        Route::post('/{payroll}/mark-paid', [\App\Http\Controllers\Api\Payroll\PayrollController::class, 'markPaid'])
+            ->name('payrolls.mark-paid');
+
+        // قسيمة الراتب
+        Route::get('/{payroll}/payslip', [\App\Http\Controllers\Api\Payroll\PayrollController::class, 'payslip'])
+            ->name('payrolls.payslip');
+    });
+
+    // -------------------------------------------------------------------------
+    // WPS - نظام حماية الأجور
+    // -------------------------------------------------------------------------
+    Route::prefix('wps')->group(function () {
+        // ملخص WPS
+        Route::get('/summary', [\App\Http\Controllers\Api\Payroll\PayrollController::class, 'wpsSummary'])
+            ->name('wps.summary');
+
+        // توليد ملف WPS
+        Route::post('/generate', [\App\Http\Controllers\Api\Payroll\PayrollController::class, 'generateWPS'])
+            ->name('wps.generate');
+    });
+
+    // -------------------------------------------------------------------------
+    // Employee Loans - السلف والقروض
+    // -------------------------------------------------------------------------
+    Route::prefix('loans')->group(function () {
+        // قائمة السلف
+        Route::get('/', [\App\Http\Controllers\Api\Payroll\LoanController::class, 'index'])
+            ->name('loans.index');
+
+        // طلب سلفة جديدة
+        Route::post('/', [\App\Http\Controllers\Api\Payroll\LoanController::class, 'store'])
+            ->name('loans.store');
+
+        // السلف النشطة للموظف
+        Route::get('/employee/{employeeId}/active', [\App\Http\Controllers\Api\Payroll\LoanController::class, 'activeLoans'])
+            ->name('loans.employee-active');
+
+        // تفاصيل السلفة
+        Route::get('/{loan}', [\App\Http\Controllers\Api\Payroll\LoanController::class, 'show'])
+            ->name('loans.show');
+
+        // الموافقة على السلفة
+        Route::post('/{loan}/approve', [\App\Http\Controllers\Api\Payroll\LoanController::class, 'approve'])
+            ->name('loans.approve');
+
+        // رفض السلفة
+        Route::post('/{loan}/reject', [\App\Http\Controllers\Api\Payroll\LoanController::class, 'reject'])
+            ->name('loans.reject');
+
+        // سجل الأقساط
+        Route::get('/{loan}/payments', [\App\Http\Controllers\Api\Payroll\LoanController::class, 'payments'])
+            ->name('loans.payments');
+    });
+
+    // -------------------------------------------------------------------------
+    // Payroll Settings - إعدادات الرواتب
+    // -------------------------------------------------------------------------
+    Route::prefix('settings')->group(function () {
+        // جميع الإعدادات
+        Route::get('/', [\App\Http\Controllers\Api\Payroll\PayrollSettingsController::class, 'index'])
+            ->name('payroll-settings.index');
+
+        // تحديث إعداد
+        Route::put('/{key}', [\App\Http\Controllers\Api\Payroll\PayrollSettingsController::class, 'update'])
+            ->name('payroll-settings.update');
+
+        // إعادة تعيين للافتراضي
+        Route::post('/reset-defaults', [\App\Http\Controllers\Api\Payroll\PayrollSettingsController::class, 'resetDefaults'])
+            ->name('payroll-settings.reset-defaults');
+    });
+});
