@@ -8,6 +8,9 @@ use App\Services\Payroll\PayrollCalculationService;
 use App\Services\Payroll\WPSService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Gate;
 use Exception;
 
 class PayrollController extends Controller
@@ -139,6 +142,14 @@ class PayrollController extends Controller
      */
     public function bulkApprove(Request $request): JsonResponse
     {
+        // التحقق من الصلاحيات
+        if (Gate::denies('approve-payroll')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية اعتماد مسيرات الرواتب',
+            ], 403);
+        }
+
         $request->validate([
             'payroll_ids' => 'required|array|min:1',
             'payroll_ids.*' => 'uuid|exists:payrolls,id',
@@ -146,17 +157,34 @@ class PayrollController extends Controller
 
         $approved = 0;
         $errors = [];
+        $userId = $request->user()->id;
 
-        foreach ($request->payroll_ids as $id) {
-            $payroll = Payroll::find($id);
+        // استخدام transaction لضمان اتساق البيانات
+        DB::transaction(function () use ($request, &$approved, &$errors, $userId) {
+            // قفل السجلات المحددة لمنع race condition
+            $payrolls = Payroll::whereIn('id', $request->payroll_ids)
+                ->lockForUpdate()
+                ->get();
 
-            if ($payroll && in_array($payroll->status, [Payroll::STATUS_CALCULATED, Payroll::STATUS_REVIEWED])) {
-                $payroll->approve($request->user()->id);
-                $approved++;
-            } else {
-                $errors[] = $id;
+            foreach ($payrolls as $payroll) {
+                if (in_array($payroll->status, [Payroll::STATUS_CALCULATED, Payroll::STATUS_REVIEWED])) {
+                    $payroll->approve($userId);
+                    $approved++;
+
+                    Log::info('Payroll approved', [
+                        'payroll_id' => $payroll->id,
+                        'payroll_number' => $payroll->payroll_number,
+                        'approved_by' => $userId,
+                    ]);
+                } else {
+                    $errors[] = [
+                        'id' => $payroll->id,
+                        'payroll_number' => $payroll->payroll_number,
+                        'reason' => "الحالة غير صالحة للاعتماد: {$payroll->status}",
+                    ];
+                }
             }
-        }
+        });
 
         return response()->json([
             'success' => true,
@@ -171,6 +199,14 @@ class PayrollController extends Controller
      */
     public function markPaid(Payroll $payroll, Request $request): JsonResponse
     {
+        // التحقق من الصلاحيات - يحتاج صلاحية دفع الرواتب
+        if (Gate::denies('pay-payroll')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية تسجيل دفع الرواتب',
+            ], 403);
+        }
+
         if ($payroll->status !== Payroll::STATUS_APPROVED) {
             return response()->json([
                 'success' => false,
@@ -178,21 +214,50 @@ class PayrollController extends Controller
             ], 400);
         }
 
-        $payroll->markAsPaid($request->user()->id);
+        try {
+            DB::transaction(function () use ($payroll, $request) {
+                $userId = $request->user()->id;
 
-        // تسجيل أقساط السلف
-        foreach ($payroll->items()->where('code', 'LOAN')->orWhere('code', 'ADVANCE')->get() as $item) {
-            if ($item->reference_id) {
-                $loan = \App\Models\Payroll\EmployeeLoan::find($item->reference_id);
-                $loan?->recordPayment($item->amount, $payroll->id);
-            }
+                $payroll->markAsPaid($userId);
+
+                // تسجيل أقساط السلف
+                $loanItems = $payroll->items()
+                    ->whereIn('code', ['LOAN', 'ADVANCE'])
+                    ->whereNotNull('reference_id')
+                    ->get();
+
+                foreach ($loanItems as $item) {
+                    $loan = \App\Models\Payroll\EmployeeLoan::find($item->reference_id);
+                    if ($loan && $loan->status === \App\Models\Payroll\EmployeeLoan::STATUS_ACTIVE) {
+                        $loan->recordPayment($item->amount, $payroll->id);
+                    }
+                }
+
+                Log::info('Payroll marked as paid', [
+                    'payroll_id' => $payroll->id,
+                    'payroll_number' => $payroll->payroll_number,
+                    'employee_id' => $payroll->employee_id,
+                    'net_salary' => $payroll->net_salary,
+                    'paid_by' => $userId,
+                ]);
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'تم تسجيل الدفع بنجاح',
+                'data' => $payroll->fresh(),
+            ]);
+        } catch (Exception $e) {
+            Log::error('Failed to mark payroll as paid', [
+                'payroll_id' => $payroll->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'فشل في تسجيل الدفع: ' . $e->getMessage(),
+            ], 500);
         }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'تم تسجيل الدفع بنجاح',
-            'data' => $payroll,
-        ]);
     }
 
     /**

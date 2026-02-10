@@ -9,15 +9,87 @@ use App\Models\Payroll\PayrollItem;
 use App\Models\Payroll\PayrollSettings;
 use App\Models\Roster\RosterAssignment;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Exception;
+use InvalidArgumentException;
 
 class PayrollCalculationService
 {
     protected array $settings;
 
+    /**
+     * القيم الافتراضية الآمنة للإعدادات
+     */
+    protected const SAFE_DEFAULTS = [
+        'working_days_per_month' => 30,
+        'working_hours_per_day' => 8,
+        'overtime_rate_normal' => 1.5,
+        'gosi_max_salary' => 45000,
+        'gosi_employee_rate' => 9.75,
+        'gosi_employer_rate' => 11.75,
+        'gosi_expat_employee_rate' => 0,
+        'gosi_expat_employer_rate' => 2,
+        'late_grace_minutes' => 15,
+        'late_deduction_per_minute' => 0,
+        'eos_first_5_years_rate' => 0.5,
+        'eos_after_5_years_rate' => 1,
+    ];
+
     public function __construct()
     {
         $this->settings = PayrollSettings::getAllSettings();
+        $this->validateSettings();
+    }
+
+    /**
+     * التحقق من صحة الإعدادات ومنع القسمة على صفر
+     */
+    protected function validateSettings(): void
+    {
+        foreach (self::SAFE_DEFAULTS as $key => $default) {
+            if (!isset($this->settings[$key]) || $this->settings[$key] === null) {
+                $this->settings[$key] = $default;
+            }
+        }
+
+        // التحقق من أن القيم المستخدمة في القسمة ليست صفراً
+        if ($this->settings['working_days_per_month'] <= 0) {
+            $this->settings['working_days_per_month'] = self::SAFE_DEFAULTS['working_days_per_month'];
+            Log::warning('Invalid working_days_per_month, using default: 30');
+        }
+
+        if ($this->settings['working_hours_per_day'] <= 0) {
+            $this->settings['working_hours_per_day'] = self::SAFE_DEFAULTS['working_hours_per_day'];
+            Log::warning('Invalid working_hours_per_day, using default: 8');
+        }
+    }
+
+    /**
+     * حساب الراتب اليومي بشكل آمن
+     */
+    protected function calculateDailySalary(float $basicSalary, float $housingAllowance): float
+    {
+        $workingDays = $this->settings['working_days_per_month'];
+
+        if ($workingDays <= 0) {
+            throw new InvalidArgumentException('عدد أيام العمل الشهرية غير صحيح');
+        }
+
+        return ($basicSalary + $housingAllowance) / $workingDays;
+    }
+
+    /**
+     * حساب أجر الساعة بشكل آمن
+     */
+    protected function calculateHourlyRate(float $dailySalary): float
+    {
+        $workingHours = $this->settings['working_hours_per_day'];
+
+        if ($workingHours <= 0) {
+            throw new InvalidArgumentException('عدد ساعات العمل اليومية غير صحيح');
+        }
+
+        return $dailySalary / $workingHours;
     }
 
     /**
@@ -143,7 +215,7 @@ class PayrollCalculationService
     protected function calculateOvertime(Payroll $payroll, Employee $employee, int $year, int $month): void
     {
         // جلب ساعات العمل الإضافي من الجدولة
-        $startDate = "{$year}-{$month}-01";
+        $startDate = sprintf('%d-%02d-01', $year, $month);
         $endDate = date('Y-m-t', strtotime($startDate));
 
         $totalOvertimeHours = RosterAssignment::forEmployee($employee->id)
@@ -152,10 +224,11 @@ class PayrollCalculationService
             ->sum('overtime_hours');
 
         if ($totalOvertimeHours > 0) {
-            // حساب سعر الساعة
-            $dailySalary = ($payroll->basic_salary + $payroll->housing_allowance) / $this->settings['working_days_per_month'];
-            $hourlyRate = $dailySalary / $this->settings['working_hours_per_day'];
-            $overtimeRate = $hourlyRate * $this->settings['overtime_rate_normal'];
+            // حساب سعر الساعة باستخدام الدوال الآمنة
+            $dailySalary = $this->calculateDailySalary($payroll->basic_salary, $payroll->housing_allowance);
+            $hourlyRate = $this->calculateHourlyRate($dailySalary);
+            $overtimeMultiplier = $this->settings['overtime_rate_normal'] ?? 1.5;
+            $overtimeRate = $hourlyRate * $overtimeMultiplier;
 
             $payroll->overtime_hours = $totalOvertimeHours;
             $payroll->overtime_rate = $overtimeRate;
@@ -165,29 +238,38 @@ class PayrollCalculationService
                 $payroll->id,
                 PayrollItem::CODE_OVERTIME,
                 $payroll->overtime_amount,
-                "{$totalOvertimeHours} ساعة × {$overtimeRate} ريال",
+                "{$totalOvertimeHours} ساعة × " . number_format($overtimeRate, 2) . " ريال",
                 $totalOvertimeHours,
                 $overtimeRate
             );
+
+            Log::info("Overtime calculated for employee {$employee->id}", [
+                'hours' => $totalOvertimeHours,
+                'rate' => $overtimeRate,
+                'amount' => $payroll->overtime_amount,
+            ]);
         }
     }
 
     /**
      * حساب خصومات الغياب والتأخير
+     * تم تحسين الأداء بدمج الاستعلامات
      */
     protected function calculateAbsenceDeductions(Payroll $payroll, Employee $employee, int $year, int $month): void
     {
-        $startDate = "{$year}-{$month}-01";
+        $startDate = sprintf('%d-%02d-01', $year, $month);
         $endDate = date('Y-m-t', strtotime($startDate));
 
-        // أيام الغياب
-        $absenceDays = RosterAssignment::forEmployee($employee->id)
+        // جلب جميع البيانات في استعلام واحد لتحسين الأداء
+        $assignments = RosterAssignment::forEmployee($employee->id)
             ->inDateRange($startDate, $endDate)
-            ->where('status', RosterAssignment::STATUS_ABSENT)
-            ->count();
+            ->get();
+
+        // أيام الغياب
+        $absenceDays = $assignments->where('status', RosterAssignment::STATUS_ABSENT)->count();
 
         if ($absenceDays > 0) {
-            $dailySalary = ($payroll->basic_salary + $payroll->housing_allowance) / $this->settings['working_days_per_month'];
+            $dailySalary = $this->calculateDailySalary($payroll->basic_salary, $payroll->housing_allowance);
             $absenceDeduction = round($absenceDays * $dailySalary, 2);
 
             $payroll->absence_days = $absenceDays;
@@ -199,23 +281,25 @@ class PayrollCalculationService
                 $absenceDeduction,
                 "{$absenceDays} يوم غياب"
             );
+
+            Log::info("Absence deduction for employee {$employee->id}", [
+                'days' => $absenceDays,
+                'amount' => $absenceDeduction,
+            ]);
         }
 
-        // دقائق التأخير
-        $lateMinutes = RosterAssignment::forEmployee($employee->id)
-            ->inDateRange($startDate, $endDate)
-            ->whereNotNull('actual_start')
-            ->get()
-            ->sum('late_minutes');
+        // دقائق التأخير - حساب من البيانات المحملة مسبقاً
+        $lateMinutes = $assignments->whereNotNull('actual_start')->sum('late_minutes');
 
         // خصم التأخير بعد دقائق السماح
-        $graceMinutes = $this->settings['late_grace_minutes'] *
-            RosterAssignment::forEmployee($employee->id)->inDateRange($startDate, $endDate)->count();
+        $graceMinutesPerDay = $this->settings['late_grace_minutes'] ?? 15;
+        $totalGraceMinutes = $graceMinutesPerDay * $assignments->count();
 
-        $chargeableMinutes = max(0, $lateMinutes - $graceMinutes);
+        $chargeableMinutes = max(0, $lateMinutes - $totalGraceMinutes);
+        $lateDeductionPerMinute = $this->settings['late_deduction_per_minute'] ?? 0;
 
-        if ($chargeableMinutes > 0 && $this->settings['late_deduction_per_minute'] > 0) {
-            $lateDeduction = round($chargeableMinutes * $this->settings['late_deduction_per_minute'], 2);
+        if ($chargeableMinutes > 0 && $lateDeductionPerMinute > 0) {
+            $lateDeduction = round($chargeableMinutes * $lateDeductionPerMinute, 2);
 
             $payroll->late_minutes = $chargeableMinutes;
             $payroll->late_deduction = $lateDeduction;
@@ -226,30 +310,45 @@ class PayrollCalculationService
                 $lateDeduction,
                 "{$chargeableMinutes} دقيقة تأخير"
             );
+
+            Log::info("Late deduction for employee {$employee->id}", [
+                'minutes' => $chargeableMinutes,
+                'amount' => $lateDeduction,
+            ]);
         }
     }
 
     /**
      * حساب التأمينات الاجتماعية (GOSI)
+     * حسب أنظمة المؤسسة العامة للتأمينات الاجتماعية السعودية
      */
     protected function calculateGOSI(Payroll $payroll, Employee $employee): void
     {
+        // الحد الأقصى للراتب الخاضع للتأمينات
+        $maxGosiSalary = $this->settings['gosi_max_salary'] ?? 45000;
+
         // الراتب الخاضع للتأمينات (الأساسي + السكن)
         $gosiSalary = min(
             $payroll->basic_salary + $payroll->housing_allowance,
-            $this->settings['gosi_max_salary']
+            $maxGosiSalary
         );
 
         // تحديد النسب حسب الجنسية
-        $isSaudi = $employee->nationality === 'SA' || $employee->nationality === 'Saudi';
+        $isSaudi = in_array($employee->nationality, ['SA', 'Saudi', 'سعودي'], true);
 
         if ($isSaudi) {
-            $employeeRate = $this->settings['gosi_employee_rate'] / 100;
-            $employerRate = $this->settings['gosi_employer_rate'] / 100;
+            // السعودي: 9.75% على الموظف، 11.75% على صاحب العمل
+            $employeeRatePercent = $this->settings['gosi_employee_rate'] ?? 9.75;
+            $employerRatePercent = $this->settings['gosi_employer_rate'] ?? 11.75;
         } else {
-            $employeeRate = $this->settings['gosi_expat_employee_rate'] / 100;
-            $employerRate = $this->settings['gosi_expat_employer_rate'] / 100;
+            // غير السعودي: 0% على الموظف، 2% على صاحب العمل (أخطار مهنية)
+            $employeeRatePercent = $this->settings['gosi_expat_employee_rate'] ?? 0;
+            $employerRatePercent = $this->settings['gosi_expat_employer_rate'] ?? 2;
         }
+
+        // تحويل النسبة المئوية إلى عدد عشري
+        $employeeRate = $employeeRatePercent / 100;
+        $employerRate = $employerRatePercent / 100;
 
         $payroll->gosi_employee = round($gosiSalary * $employeeRate, 2);
         $payroll->gosi_employer = round($gosiSalary * $employerRate, 2);
@@ -259,9 +358,16 @@ class PayrollCalculationService
                 $payroll->id,
                 PayrollItem::CODE_GOSI,
                 $payroll->gosi_employee,
-                "التأمينات الاجتماعية ({$this->settings['gosi_employee_rate']}%)"
+                "التأمينات الاجتماعية ({$employeeRatePercent}%)"
             );
         }
+
+        Log::info("GOSI calculated for employee {$employee->id}", [
+            'is_saudi' => $isSaudi,
+            'gosi_salary' => $gosiSalary,
+            'employee_contribution' => $payroll->gosi_employee,
+            'employer_contribution' => $payroll->gosi_employer,
+        ]);
     }
 
     /**

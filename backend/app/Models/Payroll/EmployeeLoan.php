@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 
 class EmployeeLoan extends Model
 {
@@ -205,27 +208,66 @@ class EmployeeLoan extends Model
 
     /**
      * تسجيل دفعة/قسط
+     *
+     * @param float $amount مبلغ الدفعة
+     * @param string $payrollId معرف مسير الراتب
+     * @return bool
+     * @throws InvalidArgumentException
      */
     public function recordPayment(float $amount, string $payrollId): bool
     {
-        $this->remaining_amount -= $amount;
-        $this->paid_installments++;
-
-        if ($this->remaining_amount <= 0) {
-            $this->remaining_amount = 0;
-            $this->status = self::STATUS_COMPLETED;
+        // التحقق من صحة المبلغ
+        if ($amount <= 0) {
+            throw new InvalidArgumentException('مبلغ الدفعة يجب أن يكون أكبر من صفر');
         }
 
-        // تسجيل الدفعة
-        LoanPayment::create([
-            'loan_id' => $this->id,
-            'payroll_id' => $payrollId,
-            'amount' => $amount,
-            'payment_date' => now(),
-            'remaining_after' => $this->remaining_amount,
-        ]);
+        if ($amount > $this->remaining_amount) {
+            throw new InvalidArgumentException(
+                "مبلغ الدفعة ({$amount}) أكبر من المبلغ المتبقي ({$this->remaining_amount})"
+            );
+        }
 
-        return $this->save();
+        // التحقق من حالة السلفة
+        if ($this->status !== self::STATUS_ACTIVE) {
+            throw new InvalidArgumentException('السلفة غير نشطة ولا يمكن تسجيل دفعات لها');
+        }
+
+        return DB::transaction(function () use ($amount, $payrollId) {
+            $previousRemaining = $this->remaining_amount;
+
+            $this->remaining_amount -= $amount;
+            $this->paid_installments++;
+
+            if ($this->remaining_amount <= 0) {
+                $this->remaining_amount = 0;
+                $this->status = self::STATUS_COMPLETED;
+            }
+
+            // تسجيل الدفعة
+            $payment = LoanPayment::create([
+                'loan_id' => $this->id,
+                'payroll_id' => $payrollId,
+                'amount' => $amount,
+                'payment_date' => now(),
+                'remaining_after' => $this->remaining_amount,
+            ]);
+
+            $saved = $this->save();
+
+            // تسجيل العملية
+            Log::info('Loan payment recorded', [
+                'loan_id' => $this->id,
+                'loan_number' => $this->loan_number,
+                'payment_id' => $payment->id,
+                'amount' => $amount,
+                'previous_remaining' => $previousRemaining,
+                'new_remaining' => $this->remaining_amount,
+                'payroll_id' => $payrollId,
+                'status' => $this->status,
+            ]);
+
+            return $saved;
+        });
     }
 
     /**

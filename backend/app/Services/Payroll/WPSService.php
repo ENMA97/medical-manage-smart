@@ -221,11 +221,15 @@ class WPSService
 
     /**
      * التحقق من صحة رقم الآيبان السعودي
+     * يستخدم خوارزمية mod-97 حسب معيار ISO 13616
+     *
+     * @param string $iban رقم الآيبان
+     * @return bool
      */
     protected function validateIBAN(string $iban): bool
     {
         // تنظيف الآيبان
-        $iban = strtoupper(str_replace(' ', '', $iban));
+        $iban = strtoupper(str_replace([' ', '-'], '', $iban));
 
         // التحقق من الطول (24 حرف للآيبان السعودي)
         if (strlen($iban) !== 24) {
@@ -237,12 +241,68 @@ class WPSService
             return false;
         }
 
-        // التحقق من أن الباقي أرقام
+        // التحقق من أن جميع الأحرف أرقام أو حروف
         if (!ctype_alnum($iban)) {
             return false;
         }
 
-        return true;
+        // التحقق من رقم الفحص والشيك ديجيت
+        if (!ctype_digit(substr($iban, 2, 2))) {
+            return false;
+        }
+
+        // التحقق من رمز البنك (يجب أن يكون رقمين)
+        $bankCode = substr($iban, 4, 2);
+        if (!array_key_exists($bankCode, self::getSaudiBanks())) {
+            // لا نفشل هنا لأنه قد تكون هناك بنوك جديدة
+            // فقط للتوافق المستقبلي
+        }
+
+        // خوارزمية mod-97 للتحقق من صحة الآيبان
+        // 1. نقل الأحرف الأربعة الأولى إلى النهاية
+        $rearranged = substr($iban, 4) . substr($iban, 0, 4);
+
+        // 2. تحويل الأحرف إلى أرقام (A=10, B=11, ..., Z=35)
+        $numeric = '';
+        for ($i = 0; $i < strlen($rearranged); $i++) {
+            $char = $rearranged[$i];
+            if (is_numeric($char)) {
+                $numeric .= $char;
+            } else {
+                // A=10, B=11, ..., Z=35
+                $numeric .= (string)(ord($char) - ord('A') + 10);
+            }
+        }
+
+        // 3. حساب mod 97 - يجب أن تكون النتيجة 1
+        // نستخدم bcmod لدعم الأرقام الكبيرة
+        if (function_exists('bcmod')) {
+            $remainder = bcmod($numeric, '97');
+        } else {
+            // بديل إذا لم يكن bcmod متاحاً
+            $remainder = $this->mod97($numeric);
+        }
+
+        return $remainder === '1';
+    }
+
+    /**
+     * حساب mod 97 لأرقام كبيرة بدون bcmod
+     *
+     * @param string $numericString
+     * @return string
+     */
+    protected function mod97(string $numericString): string
+    {
+        $remainder = 0;
+        $length = strlen($numericString);
+
+        for ($i = 0; $i < $length; $i++) {
+            $digit = (int)$numericString[$i];
+            $remainder = ($remainder * 10 + $digit) % 97;
+        }
+
+        return (string)$remainder;
     }
 
     /**
