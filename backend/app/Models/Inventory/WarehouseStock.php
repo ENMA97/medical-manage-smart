@@ -14,24 +14,22 @@ class WarehouseStock extends Model
     protected $fillable = [
         'warehouse_id',
         'item_id',
+        'batch_number',
+        'expiry_date',
         'quantity',
         'reserved_quantity',
-        'batch_number',
-        'lot_number',
-        'serial_number',
-        'expiry_date',
-        'manufacturing_date',
-        'unit_cost',
+        'available_quantity',
+        'cost_price',
         'location_in_warehouse',
         'version',
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:4',
-        'reserved_quantity' => 'decimal:4',
-        'unit_cost' => 'decimal:4',
+        'quantity' => 'decimal:2',
+        'reserved_quantity' => 'decimal:2',
+        'available_quantity' => 'decimal:2',
+        'cost_price' => 'decimal:2',
         'expiry_date' => 'date',
-        'manufacturing_date' => 'date',
         'version' => 'integer',
     ];
 
@@ -40,9 +38,9 @@ class WarehouseStock extends Model
     // =============================================================================
 
     /**
-     * الكمية المتاحة (بعد خصم المحجوز)
+     * حساب الكمية المتاحة ديناميكياً
      */
-    public function getAvailableQuantityAttribute(): float
+    public function calculateAvailableQuantity(): float
     {
         return max(0, $this->quantity - ($this->reserved_quantity ?? 0));
     }
@@ -78,7 +76,7 @@ class WarehouseStock extends Model
      */
     public function getTotalValueAttribute(): float
     {
-        return $this->quantity * ($this->unit_cost ?? 0);
+        return $this->quantity * ($this->cost_price ?? 0);
     }
 
     // =============================================================================

@@ -2,7 +2,7 @@
 
 namespace App\Models\Leave;
 
-use App\Models\Employee;
+use App\Models\HR\Employee;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

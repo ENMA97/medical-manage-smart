@@ -18,47 +18,42 @@ class Warehouse extends Model
      */
     public const TYPE_MAIN = 'main';
     public const TYPE_PHARMACY = 'pharmacy';
-    public const TYPE_CLINIC = 'clinic';
-    public const TYPE_LABORATORY = 'laboratory';
-    public const TYPE_RADIOLOGY = 'radiology';
+    public const TYPE_DEPARTMENT = 'department';
     public const TYPE_CRASH_CART = 'crash_cart';
+    public const TYPE_CONSIGNMENT = 'consignment';
     public const TYPE_QUARANTINE = 'quarantine';
+    public const TYPE_EXPIRED = 'expired';
 
     public const TYPES = [
         self::TYPE_MAIN => 'المستودع الرئيسي',
         self::TYPE_PHARMACY => 'صيدلية',
-        self::TYPE_CLINIC => 'عيادة',
-        self::TYPE_LABORATORY => 'مختبر',
-        self::TYPE_RADIOLOGY => 'أشعة',
+        self::TYPE_DEPARTMENT => 'قسم',
         self::TYPE_CRASH_CART => 'عربة الطوارئ',
-        self::TYPE_QUARANTINE => 'الحجر',
+        self::TYPE_CONSIGNMENT => 'أمانة',
+        self::TYPE_QUARANTINE => 'حجر صحي',
+        self::TYPE_EXPIRED => 'منتهي الصلاحية',
     ];
 
     protected $fillable = [
         'code',
         'name_ar',
         'name_en',
-        'type',
         'description',
+        'type',
         'location',
         'department_id',
         'manager_id',
         'is_active',
-        'allows_negative_stock',
-        'requires_batch_tracking',
-        'requires_expiry_tracking',
-        'is_crash_cart',
-        'parent_warehouse_id',
-        'settings',
+        'requires_approval',
+        'track_batch',
+        'track_expiry',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'allows_negative_stock' => 'boolean',
-        'requires_batch_tracking' => 'boolean',
-        'requires_expiry_tracking' => 'boolean',
-        'is_crash_cart' => 'boolean',
-        'settings' => 'array',
+        'requires_approval' => 'boolean',
+        'track_batch' => 'boolean',
+        'track_expiry' => 'boolean',
     ];
 
     // =============================================================================
@@ -101,14 +96,14 @@ class Warehouse extends Model
         return $this->hasMany(InventoryMovement::class, 'to_warehouse_id');
     }
 
-    public function parentWarehouse(): BelongsTo
+    public function department(): BelongsTo
     {
-        return $this->belongsTo(Warehouse::class, 'parent_warehouse_id');
+        return $this->belongsTo(\App\Models\HR\Department::class);
     }
 
-    public function childWarehouses(): HasMany
+    public function manager(): BelongsTo
     {
-        return $this->hasMany(Warehouse::class, 'parent_warehouse_id');
+        return $this->belongsTo(\App\Models\HR\Employee::class, 'manager_id');
     }
 
     // =============================================================================
@@ -127,12 +122,12 @@ class Warehouse extends Model
 
     public function scopeCrashCarts($query)
     {
-        return $query->where('is_crash_cart', true);
+        return $query->where('type', self::TYPE_CRASH_CART);
     }
 
     public function scopeMain($query)
     {
-        return $query->whereNull('parent_warehouse_id');
+        return $query->where('type', self::TYPE_MAIN);
     }
 
     // =============================================================================

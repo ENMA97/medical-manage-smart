@@ -20,43 +20,52 @@ class AttendanceRecord extends Model
     public const TYPE_BREAK_START = 'break_start';
     public const TYPE_BREAK_END = 'break_end';
 
+    public const TYPES = [
+        self::TYPE_CHECK_IN => 'حضور',
+        self::TYPE_CHECK_OUT => 'انصراف',
+        self::TYPE_BREAK_START => 'بداية استراحة',
+        self::TYPE_BREAK_END => 'نهاية استراحة',
+    ];
+
     /**
      * مصادر التسجيل
      */
-    public const SOURCE_BIOMETRIC = 'biometric';
+    public const SOURCE_DEVICE = 'device';
     public const SOURCE_MANUAL = 'manual';
     public const SOURCE_MOBILE = 'mobile';
-    public const SOURCE_WEB = 'web';
 
-    // جدول غير قابل للتعديل (immutable)
+    public const SOURCES = [
+        self::SOURCE_DEVICE => 'جهاز بصمة',
+        self::SOURCE_MANUAL => 'يدوي',
+        self::SOURCE_MOBILE => 'جوال',
+    ];
+
+    // جدول غير قابل للتعديل (immutable) - فقط created_at
     public $timestamps = true;
     const UPDATED_AT = null;
 
     protected $fillable = [
         'employee_id',
-        'roster_assignment_id',
-        'record_type',
-        'record_time',
+        'device_id',
+        'type',
+        'punched_at',
         'source',
-        'biometric_device_id',
-        'location_latitude',
-        'location_longitude',
-        'location_accuracy',
-        'ip_address',
-        'user_agent',
+        'latitude',
+        'longitude',
+        'location_name',
+        'device_serial',
         'is_valid',
-        'validation_notes',
-        'verified_by',
-        'verified_at',
+        'notes',
+        'processed_by',
+        'processed_at',
     ];
 
     protected $casts = [
-        'record_time' => 'datetime',
-        'location_latitude' => 'decimal:8',
-        'location_longitude' => 'decimal:8',
-        'location_accuracy' => 'decimal:2',
+        'punched_at' => 'datetime',
+        'latitude' => 'decimal:8',
+        'longitude' => 'decimal:8',
         'is_valid' => 'boolean',
-        'verified_at' => 'datetime',
+        'processed_at' => 'datetime',
     ];
 
     // =============================================================================
@@ -65,24 +74,12 @@ class AttendanceRecord extends Model
 
     public function getSourceNameAttribute(): string
     {
-        return match ($this->source) {
-            self::SOURCE_BIOMETRIC => 'بصمة',
-            self::SOURCE_MANUAL => 'يدوي',
-            self::SOURCE_MOBILE => 'جوال',
-            self::SOURCE_WEB => 'ويب',
-            default => $this->source,
-        };
+        return self::SOURCES[$this->source] ?? $this->source;
     }
 
     public function getTypeNameAttribute(): string
     {
-        return match ($this->record_type) {
-            self::TYPE_CHECK_IN => 'حضور',
-            self::TYPE_CHECK_OUT => 'انصراف',
-            self::TYPE_BREAK_START => 'بداية استراحة',
-            self::TYPE_BREAK_END => 'نهاية استراحة',
-            default => $this->record_type,
-        };
+        return self::TYPES[$this->type] ?? $this->type;
     }
 
     // =============================================================================
@@ -94,19 +91,14 @@ class AttendanceRecord extends Model
         return $this->belongsTo(Employee::class);
     }
 
-    public function rosterAssignment(): BelongsTo
+    public function device(): BelongsTo
     {
-        return $this->belongsTo(RosterAssignment::class);
+        return $this->belongsTo(BiometricDevice::class, 'device_id');
     }
 
-    public function biometricDevice(): BelongsTo
+    public function processedByUser(): BelongsTo
     {
-        return $this->belongsTo(BiometricDevice::class);
-    }
-
-    public function verifier(): BelongsTo
-    {
-        return $this->belongsTo(Employee::class, 'verified_by');
+        return $this->belongsTo(\App\Models\User::class, 'processed_by');
     }
 
     // =============================================================================
@@ -115,12 +107,12 @@ class AttendanceRecord extends Model
 
     public function scopeCheckIns($query)
     {
-        return $query->where('record_type', self::TYPE_CHECK_IN);
+        return $query->where('type', self::TYPE_CHECK_IN);
     }
 
     public function scopeCheckOuts($query)
     {
-        return $query->where('record_type', self::TYPE_CHECK_OUT);
+        return $query->where('type', self::TYPE_CHECK_OUT);
     }
 
     public function scopeValid($query)
@@ -128,14 +120,14 @@ class AttendanceRecord extends Model
         return $query->where('is_valid', true);
     }
 
-    public function scopeFromBiometric($query)
+    public function scopeFromDevice($query)
     {
-        return $query->where('source', self::SOURCE_BIOMETRIC);
+        return $query->where('source', self::SOURCE_DEVICE);
     }
 
     public function scopeForDate($query, $date)
     {
-        return $query->whereDate('record_time', $date);
+        return $query->whereDate('punched_at', $date);
     }
 
     public function scopeForEmployee($query, string $employeeId)
@@ -148,15 +140,15 @@ class AttendanceRecord extends Model
     // =============================================================================
 
     /**
-     * التحقق من صحة السجل
+     * معالجة السجل
      */
-    public function verify(string $verifierId, bool $isValid, ?string $notes = null): bool
+    public function process(string $processedBy, ?string $notes = null): bool
     {
-        $this->is_valid = $isValid;
-        $this->verified_by = $verifierId;
-        $this->verified_at = now();
-        $this->validation_notes = $notes;
-
+        $this->processed_by = $processedBy;
+        $this->processed_at = now();
+        if ($notes) {
+            $this->notes = $notes;
+        }
         return $this->save();
     }
 
@@ -165,13 +157,13 @@ class AttendanceRecord extends Model
      */
     public function isWithinLocation(float $targetLat, float $targetLng, float $radiusMeters): bool
     {
-        if (!$this->location_latitude || !$this->location_longitude) {
+        if (!$this->latitude || !$this->longitude) {
             return false;
         }
 
         $distance = $this->calculateDistance(
-            $this->location_latitude,
-            $this->location_longitude,
+            $this->latitude,
+            $this->longitude,
             $targetLat,
             $targetLng
         );
@@ -180,7 +172,7 @@ class AttendanceRecord extends Model
     }
 
     /**
-     * حساب المسافة بين نقطتين
+     * حساب المسافة بين نقطتين (بالأمتار)
      */
     protected function calculateDistance(float $lat1, float $lng1, float $lat2, float $lng2): float
     {

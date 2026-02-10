@@ -17,29 +17,22 @@ class InventoryMovement extends Model
     public const TYPE_RECEIVE = 'receive';
     public const TYPE_ISSUE = 'issue';
     public const TYPE_TRANSFER = 'transfer';
-    public const TYPE_ADJUSTMENT = 'adjustment';
+    public const TYPE_ADJUST_IN = 'adjust_in';
+    public const TYPE_ADJUST_OUT = 'adjust_out';
     public const TYPE_RETURN = 'return';
-    public const TYPE_DISPOSAL = 'disposal';
     public const TYPE_EXPIRED = 'expired';
+    public const TYPE_DAMAGED = 'damaged';
 
     public const TYPES = [
         self::TYPE_RECEIVE => 'استلام',
         self::TYPE_ISSUE => 'صرف',
         self::TYPE_TRANSFER => 'تحويل',
-        self::TYPE_ADJUSTMENT => 'تسوية',
-        self::TYPE_RETURN => 'مرتجع',
-        self::TYPE_DISPOSAL => 'إتلاف',
-        self::TYPE_EXPIRED => 'منتهي الصلاحية',
+        self::TYPE_ADJUST_IN => 'تعديل (زيادة)',
+        self::TYPE_ADJUST_OUT => 'تعديل (نقص)',
+        self::TYPE_RETURN => 'إرجاع',
+        self::TYPE_EXPIRED => 'انتهاء صلاحية',
+        self::TYPE_DAMAGED => 'تالف',
     ];
-
-    /**
-     * حالات الحركة
-     */
-    public const STATUS_DRAFT = 'draft';
-    public const STATUS_PENDING = 'pending';
-    public const STATUS_APPROVED = 'approved';
-    public const STATUS_COMPLETED = 'completed';
-    public const STATUS_CANCELLED = 'cancelled';
 
     // الجدول غير قابل للتعديل (immutable audit)
     public $timestamps = true;
@@ -47,32 +40,28 @@ class InventoryMovement extends Model
 
     protected $fillable = [
         'movement_number',
-        'type',
-        'status',
         'item_id',
         'from_warehouse_id',
         'to_warehouse_id',
+        'batch_number',
+        'type',
         'quantity',
         'unit_cost',
         'total_cost',
-        'batch_number',
-        'lot_number',
         'expiry_date',
         'reference_type',
         'reference_id',
         'reason',
         'notes',
-        'created_by',
+        'performed_by',
         'approved_by',
-        'approved_at',
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:4',
-        'unit_cost' => 'decimal:4',
-        'total_cost' => 'decimal:4',
+        'quantity' => 'decimal:2',
+        'unit_cost' => 'decimal:2',
+        'total_cost' => 'decimal:2',
         'expiry_date' => 'date',
-        'approved_at' => 'datetime',
     ];
 
     // =============================================================================
@@ -96,10 +85,11 @@ class InventoryMovement extends Model
             self::TYPE_RECEIVE => "استلام {$qty} من {$item}",
             self::TYPE_ISSUE => "صرف {$qty} من {$item}",
             self::TYPE_TRANSFER => "تحويل {$qty} من {$item}",
-            self::TYPE_ADJUSTMENT => "تسوية {$qty} من {$item}",
-            self::TYPE_RETURN => "مرتجع {$qty} من {$item}",
-            self::TYPE_DISPOSAL => "إتلاف {$qty} من {$item}",
+            self::TYPE_ADJUST_IN => "تعديل زيادة {$qty} من {$item}",
+            self::TYPE_ADJUST_OUT => "تعديل نقص {$qty} من {$item}",
+            self::TYPE_RETURN => "إرجاع {$qty} من {$item}",
             self::TYPE_EXPIRED => "انتهاء صلاحية {$qty} من {$item}",
+            self::TYPE_DAMAGED => "تالف {$qty} من {$item}",
             default => "حركة {$qty} من {$item}",
         };
     }
@@ -123,6 +113,16 @@ class InventoryMovement extends Model
         return $this->belongsTo(Warehouse::class, 'to_warehouse_id');
     }
 
+    public function performedByUser(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'performed_by');
+    }
+
+    public function approvedByUser(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'approved_by');
+    }
+
     // =============================================================================
     // Scopes
     // =============================================================================
@@ -132,14 +132,9 @@ class InventoryMovement extends Model
         return $query->where('type', $type);
     }
 
-    public function scopeCompleted($query)
+    public function scopeApproved($query)
     {
-        return $query->where('status', self::STATUS_COMPLETED);
-    }
-
-    public function scopePending($query)
-    {
-        return $query->where('status', self::STATUS_PENDING);
+        return $query->whereNotNull('approved_by');
     }
 
     public function scopeInDateRange($query, $startDate, $endDate)
@@ -179,10 +174,11 @@ class InventoryMovement extends Model
             self::TYPE_RECEIVE => 'RCV',
             self::TYPE_ISSUE => 'ISS',
             self::TYPE_TRANSFER => 'TRF',
-            self::TYPE_ADJUSTMENT => 'ADJ',
+            self::TYPE_ADJUST_IN => 'ADI',
+            self::TYPE_ADJUST_OUT => 'ADO',
             self::TYPE_RETURN => 'RTN',
-            self::TYPE_DISPOSAL => 'DSP',
             self::TYPE_EXPIRED => 'EXP',
+            self::TYPE_DAMAGED => 'DMG',
             default => 'MOV',
         };
 

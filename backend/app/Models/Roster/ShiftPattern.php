@@ -6,11 +6,9 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
 class ShiftPattern extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids;
 
     /**
      * أنواع الورديات
@@ -18,46 +16,39 @@ class ShiftPattern extends Model
     public const TYPE_MORNING = 'morning';
     public const TYPE_EVENING = 'evening';
     public const TYPE_NIGHT = 'night';
-    public const TYPE_ONCALL = 'on_call';
+    public const TYPE_SPLIT = 'split';
 
     public const TYPES = [
         self::TYPE_MORNING => 'صباحي',
         self::TYPE_EVENING => 'مسائي',
         self::TYPE_NIGHT => 'ليلي',
-        self::TYPE_ONCALL => 'تحت الطلب',
+        self::TYPE_SPLIT => 'متقطع',
     ];
 
     protected $fillable = [
         'code',
         'name_ar',
         'name_en',
+        'description',
         'type',
         'start_time',
         'end_time',
+        'break_start',
+        'break_end',
         'break_duration_minutes',
-        'working_hours',
+        'scheduled_hours',
         'color_code',
-        'is_overnight',
         'is_active',
-        'applicable_days',
-        'department_ids',
-        'position_ids',
-        'minimum_staff',
-        'settings',
     ];
 
     protected $casts = [
         'start_time' => 'datetime:H:i',
         'end_time' => 'datetime:H:i',
-        'break_duration_minutes' => 'integer',
-        'working_hours' => 'decimal:2',
-        'is_overnight' => 'boolean',
+        'break_start' => 'datetime:H:i',
+        'break_end' => 'datetime:H:i',
+        'break_duration_minutes' => 'decimal:2',
+        'scheduled_hours' => 'decimal:2',
         'is_active' => 'boolean',
-        'applicable_days' => 'array',
-        'department_ids' => 'array',
-        'position_ids' => 'array',
-        'minimum_staff' => 'integer',
-        'settings' => 'array',
     ];
 
     // =============================================================================
@@ -80,6 +71,10 @@ class ShiftPattern extends Model
      */
     public function getDurationHoursAttribute(): float
     {
+        if ($this->scheduled_hours) {
+            return (float) $this->scheduled_hours;
+        }
+
         if (!$this->start_time || !$this->end_time) {
             return 0;
         }
@@ -87,7 +82,8 @@ class ShiftPattern extends Model
         $start = \Carbon\Carbon::parse($this->start_time);
         $end = \Carbon\Carbon::parse($this->end_time);
 
-        if ($this->is_overnight && $end->lt($start)) {
+        // إذا كانت نهاية الوردية قبل بدايتها فهي وردية ليلية
+        if ($end->lt($start)) {
             $end->addDay();
         }
 
@@ -130,45 +126,4 @@ class ShiftPattern extends Model
         return $query->where('type', $type);
     }
 
-    public function scopeForDepartment($query, string $departmentId)
-    {
-        return $query->where(function ($q) use ($departmentId) {
-            $q->whereNull('department_ids')
-              ->orWhereJsonContains('department_ids', $departmentId);
-        });
-    }
-
-    public function scopeForDay($query, string $day)
-    {
-        return $query->where(function ($q) use ($day) {
-            $q->whereNull('applicable_days')
-              ->orWhereJsonContains('applicable_days', $day);
-        });
-    }
-
-    // =============================================================================
-    // Methods
-    // =============================================================================
-
-    /**
-     * التحقق من تطبيق الوردية على يوم معين
-     */
-    public function isApplicableOnDay(string $day): bool
-    {
-        if (empty($this->applicable_days)) {
-            return true;
-        }
-        return in_array($day, $this->applicable_days);
-    }
-
-    /**
-     * التحقق من تطبيق الوردية على قسم معين
-     */
-    public function isApplicableForDepartment(string $departmentId): bool
-    {
-        if (empty($this->department_ids)) {
-            return true;
-        }
-        return in_array($departmentId, $this->department_ids);
-    }
 }

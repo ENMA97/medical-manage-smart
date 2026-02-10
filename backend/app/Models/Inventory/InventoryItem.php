@@ -14,22 +14,24 @@ class InventoryItem extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     /**
-     * فئات الأصناف
+     * أنواع الأصناف
      */
-    public const CATEGORY_MEDICATION = 'medication';
-    public const CATEGORY_CONSUMABLE = 'consumable';
-    public const CATEGORY_EQUIPMENT = 'equipment';
-    public const CATEGORY_REAGENT = 'reagent';
-    public const CATEGORY_IMPLANT = 'implant';
-    public const CATEGORY_SURGICAL = 'surgical';
+    public const TYPE_MEDICINE = 'medicine';
+    public const TYPE_CONSUMABLE = 'consumable';
+    public const TYPE_EQUIPMENT = 'equipment';
+    public const TYPE_SURGICAL = 'surgical';
+    public const TYPE_LABORATORY = 'laboratory';
+    public const TYPE_RADIOLOGY = 'radiology';
+    public const TYPE_OTHER = 'other';
 
-    public const CATEGORIES = [
-        self::CATEGORY_MEDICATION => 'أدوية',
-        self::CATEGORY_CONSUMABLE => 'مستهلكات',
-        self::CATEGORY_EQUIPMENT => 'معدات',
-        self::CATEGORY_REAGENT => 'كواشف',
-        self::CATEGORY_IMPLANT => 'غرسات',
-        self::CATEGORY_SURGICAL => 'أدوات جراحية',
+    public const TYPES = [
+        self::TYPE_MEDICINE => 'دواء',
+        self::TYPE_CONSUMABLE => 'مستهلك',
+        self::TYPE_EQUIPMENT => 'معدات',
+        self::TYPE_SURGICAL => 'جراحي',
+        self::TYPE_LABORATORY => 'مختبري',
+        self::TYPE_RADIOLOGY => 'أشعة',
+        self::TYPE_OTHER => 'أخرى',
     ];
 
     protected $fillable = [
@@ -38,46 +40,39 @@ class InventoryItem extends Model
         'name_ar',
         'name_en',
         'description',
-        'category',
-        'subcategory_id',
-        'unit_of_measure',
+        'category_id',
+        'type',
+        'unit',
         'secondary_unit',
-        'conversion_factor',
+        'conversion_rate',
+        'generic_name',
         'manufacturer',
-        'supplier_id',
-        'unit_cost',
-        'unit_price',
-        'currency',
+        'strength',
+        'dosage_form',
         'reorder_level',
-        'minimum_stock',
-        'maximum_stock',
-        'is_controlled_substance',
+        'max_stock',
+        'min_stock',
+        'cost_price',
+        'selling_price',
+        'track_batch',
+        'track_expiry',
+        'is_controlled',
         'requires_prescription',
-        'requires_cold_chain',
-        'storage_conditions',
-        'shelf_life_days',
         'is_active',
-        'is_serialized',
-        'is_lot_tracked',
-        'image_path',
-        'specifications',
     ];
 
     protected $casts = [
-        'unit_cost' => 'decimal:4',
-        'unit_price' => 'decimal:4',
-        'conversion_factor' => 'decimal:4',
+        'conversion_rate' => 'decimal:2',
         'reorder_level' => 'decimal:2',
-        'minimum_stock' => 'decimal:2',
-        'maximum_stock' => 'decimal:2',
-        'shelf_life_days' => 'integer',
-        'is_controlled_substance' => 'boolean',
+        'max_stock' => 'decimal:2',
+        'min_stock' => 'decimal:2',
+        'cost_price' => 'decimal:2',
+        'selling_price' => 'decimal:2',
+        'track_batch' => 'boolean',
+        'track_expiry' => 'boolean',
+        'is_controlled' => 'boolean',
         'requires_prescription' => 'boolean',
-        'requires_cold_chain' => 'boolean',
         'is_active' => 'boolean',
-        'is_serialized' => 'boolean',
-        'is_lot_tracked' => 'boolean',
-        'specifications' => 'array',
     ];
 
     // =============================================================================
@@ -90,9 +85,9 @@ class InventoryItem extends Model
         return $locale === 'ar' ? $this->name_ar : ($this->name_en ?: $this->name_ar);
     }
 
-    public function getCategoryNameAttribute(): string
+    public function getTypeNameAttribute(): string
     {
-        return self::CATEGORIES[$this->category] ?? $this->category;
+        return self::TYPES[$this->type] ?? $this->type;
     }
 
     /**
@@ -123,6 +118,11 @@ class InventoryItem extends Model
     // Relationships
     // =============================================================================
 
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(ItemCategory::class, 'category_id');
+    }
+
     public function stocks(): HasMany
     {
         return $this->hasMany(WarehouseStock::class, 'item_id');
@@ -147,14 +147,14 @@ class InventoryItem extends Model
         return $query->where('is_active', true);
     }
 
-    public function scopeOfCategory($query, string $category)
+    public function scopeOfType($query, string $type)
     {
-        return $query->where('category', $category);
+        return $query->where('type', $type);
     }
 
-    public function scopeControlledSubstances($query)
+    public function scopeControlled($query)
     {
-        return $query->where('is_controlled_substance', true);
+        return $query->where('is_controlled', true);
     }
 
     public function scopeLowStock($query)
@@ -202,10 +202,10 @@ class InventoryItem extends Model
      */
     public function convertToSecondaryUnit(float $quantity): float
     {
-        if (!$this->conversion_factor || $this->conversion_factor == 0) {
+        if (!$this->conversion_rate || $this->conversion_rate == 0) {
             return $quantity;
         }
-        return $quantity * $this->conversion_factor;
+        return $quantity * $this->conversion_rate;
     }
 
     /**
@@ -213,9 +213,9 @@ class InventoryItem extends Model
      */
     public function convertToPrimaryUnit(float $quantity): float
     {
-        if (!$this->conversion_factor || $this->conversion_factor == 0) {
+        if (!$this->conversion_rate || $this->conversion_rate == 0) {
             return $quantity;
         }
-        return $quantity / $this->conversion_factor;
+        return $quantity / $this->conversion_rate;
     }
 }

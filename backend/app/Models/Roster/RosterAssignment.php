@@ -14,24 +14,39 @@ class RosterAssignment extends Model
     use HasFactory, HasUuids;
 
     /**
+     * أنواع التعيين
+     */
+    public const TYPE_REGULAR = 'regular';
+    public const TYPE_OVERTIME = 'overtime';
+    public const TYPE_ON_CALL = 'on_call';
+    public const TYPE_OFF = 'off';
+
+    public const TYPES = [
+        self::TYPE_REGULAR => 'عادي',
+        self::TYPE_OVERTIME => 'إضافي',
+        self::TYPE_ON_CALL => 'تحت الطلب',
+        self::TYPE_OFF => 'إجازة/راحة',
+    ];
+
+    /**
      * حالات التعيين
      */
     public const STATUS_SCHEDULED = 'scheduled';
-    public const STATUS_CONFIRMED = 'confirmed';
-    public const STATUS_IN_PROGRESS = 'in_progress';
-    public const STATUS_COMPLETED = 'completed';
+    public const STATUS_PRESENT = 'present';
     public const STATUS_ABSENT = 'absent';
+    public const STATUS_LATE = 'late';
     public const STATUS_ON_LEAVE = 'on_leave';
-    public const STATUS_SWAPPED = 'swapped';
+    public const STATUS_SICK = 'sick';
+    public const STATUS_COMPLETED = 'completed';
 
     public const STATUSES = [
         self::STATUS_SCHEDULED => 'مجدول',
-        self::STATUS_CONFIRMED => 'مؤكد',
-        self::STATUS_IN_PROGRESS => 'جاري',
-        self::STATUS_COMPLETED => 'مكتمل',
+        self::STATUS_PRESENT => 'حاضر',
         self::STATUS_ABSENT => 'غائب',
+        self::STATUS_LATE => 'متأخر',
         self::STATUS_ON_LEAVE => 'في إجازة',
-        self::STATUS_SWAPPED => 'تم التبديل',
+        self::STATUS_SICK => 'مريض',
+        self::STATUS_COMPLETED => 'مكتمل',
     ];
 
     protected $fillable = [
@@ -39,26 +54,36 @@ class RosterAssignment extends Model
         'employee_id',
         'shift_pattern_id',
         'assignment_date',
+        'type',
         'scheduled_start',
         'scheduled_end',
+        'scheduled_hours',
         'actual_start',
         'actual_end',
-        'status',
+        'actual_hours',
+        'late_minutes',
+        'early_leave_minutes',
         'is_overtime',
         'overtime_hours',
+        'overtime_rate',
+        'status',
         'notes',
-        'created_by',
-        'modified_by',
+        'updated_by',
     ];
 
     protected $casts = [
         'assignment_date' => 'date',
-        'scheduled_start' => 'datetime',
-        'scheduled_end' => 'datetime',
+        'scheduled_start' => 'datetime:H:i',
+        'scheduled_end' => 'datetime:H:i',
+        'scheduled_hours' => 'decimal:2',
         'actual_start' => 'datetime',
         'actual_end' => 'datetime',
+        'actual_hours' => 'decimal:2',
+        'late_minutes' => 'integer',
+        'early_leave_minutes' => 'integer',
         'is_overtime' => 'boolean',
         'overtime_hours' => 'decimal:2',
+        'overtime_rate' => 'decimal:2',
     ];
 
     // =============================================================================
@@ -71,55 +96,11 @@ class RosterAssignment extends Model
     }
 
     /**
-     * ساعات العمل المجدولة
+     * اسم نوع التعيين
      */
-    public function getScheduledHoursAttribute(): float
+    public function getTypeNameAttribute(): string
     {
-        if (!$this->scheduled_start || !$this->scheduled_end) {
-            return 0;
-        }
-        return round($this->scheduled_start->diffInMinutes($this->scheduled_end) / 60, 2);
-    }
-
-    /**
-     * ساعات العمل الفعلية
-     */
-    public function getActualHoursAttribute(): ?float
-    {
-        if (!$this->actual_start || !$this->actual_end) {
-            return null;
-        }
-        return round($this->actual_start->diffInMinutes($this->actual_end) / 60, 2);
-    }
-
-    /**
-     * التأخير بالدقائق
-     */
-    public function getLateMinutesAttribute(): int
-    {
-        if (!$this->scheduled_start || !$this->actual_start) {
-            return 0;
-        }
-
-        if ($this->actual_start->gt($this->scheduled_start)) {
-            return $this->scheduled_start->diffInMinutes($this->actual_start);
-        }
-        return 0;
-    }
-
-    /**
-     * الخروج المبكر بالدقائق
-     */
-    public function getEarlyLeaveMinutesAttribute(): int
-    {
-        if (!$this->scheduled_end || !$this->actual_end) {
-            return 0;
-        }
-
-        if ($this->actual_end->lt($this->scheduled_end)) {
-            return $this->actual_end->diffInMinutes($this->scheduled_end);
-        }
-        return 0;
+        return self::TYPES[$this->type] ?? $this->type;
     }
 
     /**
@@ -127,7 +108,39 @@ class RosterAssignment extends Model
      */
     public function getIsLateAttribute(): bool
     {
-        return $this->late_minutes > 0;
+        return ($this->late_minutes ?? 0) > 0;
+    }
+
+    /**
+     * حساب ساعات العمل المجدولة ديناميكياً
+     */
+    public function calculateScheduledHours(): float
+    {
+        if ($this->scheduled_hours) {
+            return (float) $this->scheduled_hours;
+        }
+
+        if (!$this->scheduled_start || !$this->scheduled_end) {
+            return 0;
+        }
+
+        return round($this->scheduled_start->diffInMinutes($this->scheduled_end) / 60, 2);
+    }
+
+    /**
+     * حساب ساعات العمل الفعلية ديناميكياً
+     */
+    public function calculateActualHours(): ?float
+    {
+        if ($this->actual_hours) {
+            return (float) $this->actual_hours;
+        }
+
+        if (!$this->actual_start || !$this->actual_end) {
+            return null;
+        }
+
+        return round($this->actual_start->diffInMinutes($this->actual_end) / 60, 2);
     }
 
     // =============================================================================
@@ -200,10 +213,21 @@ class RosterAssignment extends Model
     /**
      * تسجيل الحضور
      */
-    public function checkIn(\DateTime $time, ?string $biometricDeviceId = null): bool
+    public function checkIn(\DateTime $time): bool
     {
         $this->actual_start = $time;
-        $this->status = self::STATUS_IN_PROGRESS;
+        $this->status = self::STATUS_PRESENT;
+
+        // حساب التأخير
+        if ($this->scheduled_start) {
+            $scheduledStart = \Carbon\Carbon::parse($this->scheduled_start);
+            $actualStart = \Carbon\Carbon::parse($time);
+            if ($actualStart->gt($scheduledStart)) {
+                $this->late_minutes = $scheduledStart->diffInMinutes($actualStart);
+                $this->status = self::STATUS_LATE;
+            }
+        }
+
         return $this->save();
     }
 
@@ -215,13 +239,26 @@ class RosterAssignment extends Model
         $this->actual_end = $time;
         $this->status = self::STATUS_COMPLETED;
 
-        // حساب الوقت الإضافي
-        if ($this->actual_hours && $this->scheduled_hours) {
-            $overtime = $this->actual_hours - $this->scheduled_hours;
-            if ($overtime > 0) {
-                $this->is_overtime = true;
-                $this->overtime_hours = $overtime;
+        // حساب الخروج المبكر
+        if ($this->scheduled_end) {
+            $scheduledEnd = \Carbon\Carbon::parse($this->scheduled_end);
+            $actualEnd = \Carbon\Carbon::parse($time);
+            if ($actualEnd->lt($scheduledEnd)) {
+                $this->early_leave_minutes = $actualEnd->diffInMinutes($scheduledEnd);
             }
+        }
+
+        // حساب ساعات العمل الفعلية
+        if ($this->actual_start) {
+            $this->actual_hours = $this->calculateActualHours();
+        }
+
+        // حساب الوقت الإضافي
+        $scheduled = $this->scheduled_hours ?? 0;
+        $actual = $this->actual_hours ?? 0;
+        if ($actual > $scheduled) {
+            $this->is_overtime = true;
+            $this->overtime_hours = $actual - $scheduled;
         }
 
         return $this->save();
@@ -233,6 +270,16 @@ class RosterAssignment extends Model
     public function markAbsent(?string $notes = null): bool
     {
         $this->status = self::STATUS_ABSENT;
+        $this->notes = $notes;
+        return $this->save();
+    }
+
+    /**
+     * تسجيل مرض
+     */
+    public function markSick(?string $notes = null): bool
+    {
+        $this->status = self::STATUS_SICK;
         $this->notes = $notes;
         return $this->save();
     }
