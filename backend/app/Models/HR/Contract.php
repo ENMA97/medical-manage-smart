@@ -32,50 +32,45 @@ class Contract extends Model
     protected $fillable = [
         'contract_number',
         'employee_id',
-        'contract_type',
+        'type',
         'start_date',
         'end_date',
-        'probation_months',
+        'is_indefinite',
         'basic_salary',
         'housing_allowance',
         'transportation_allowance',
+        'food_allowance',
+        'phone_allowance',
         'other_allowances',
-        'total_salary',
-        'currency',
-        'payment_frequency',
+        'allowance_details',
         'working_hours_per_week',
-        'vacation_days',
-        'notice_period_days',
+        'working_days_per_week',
+        'annual_leave_days',
+        'sick_leave_days',
+        'tamheer_stipend',
         'percentage_rate',
-        'is_renewable',
-        'renewal_terms',
-        'terms_and_conditions',
-        'signed_date',
-        'signed_by_employee',
-        'signed_by_company',
-        'attachment_path',
         'is_active',
         'termination_date',
         'termination_reason',
+        'terminated_by',
         'notes',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
-        'signed_date' => 'date',
         'termination_date' => 'date',
         'basic_salary' => 'decimal:2',
         'housing_allowance' => 'decimal:2',
         'transportation_allowance' => 'decimal:2',
+        'food_allowance' => 'decimal:2',
+        'phone_allowance' => 'decimal:2',
         'other_allowances' => 'decimal:2',
-        'total_salary' => 'decimal:2',
+        'tamheer_stipend' => 'decimal:2',
         'percentage_rate' => 'decimal:2',
-        'is_renewable' => 'boolean',
-        'signed_by_employee' => 'boolean',
-        'signed_by_company' => 'boolean',
+        'is_indefinite' => 'boolean',
         'is_active' => 'boolean',
-        'renewal_terms' => 'array',
+        'allowance_details' => 'array',
     ];
 
     // =============================================================================
@@ -85,9 +80,22 @@ class Contract extends Model
     /**
      * اسم نوع العقد
      */
-    public function getContractTypeNameAttribute(): string
+    public function getTypeNameAttribute(): string
     {
-        return self::TYPES[$this->contract_type] ?? $this->contract_type;
+        return self::TYPES[$this->type] ?? $this->type;
+    }
+
+    /**
+     * إجمالي الراتب المحسوب
+     */
+    public function getTotalSalaryAttribute(): float
+    {
+        return $this->basic_salary +
+               $this->housing_allowance +
+               $this->transportation_allowance +
+               $this->food_allowance +
+               $this->phone_allowance +
+               $this->other_allowances;
     }
 
     /**
@@ -134,16 +142,6 @@ class Contract extends Model
         return $this->remaining_days <= 30 && $this->remaining_days > 0;
     }
 
-    /**
-     * إجمالي الراتب المحسوب
-     */
-    public function getCalculatedTotalSalaryAttribute(): float
-    {
-        return $this->basic_salary +
-               $this->housing_allowance +
-               $this->transportation_allowance +
-               $this->other_allowances;
-    }
 
     // =============================================================================
     // Relationships
@@ -191,7 +189,7 @@ class Contract extends Model
      */
     public function scopeOfType($query, string $type)
     {
-        return $query->where('contract_type', $type);
+        return $query->where('type', $type);
     }
 
     // =============================================================================

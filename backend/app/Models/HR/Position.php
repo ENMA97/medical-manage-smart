@@ -15,22 +15,16 @@ class Position extends Model
 
     protected $fillable = [
         'code',
-        'title_ar',
-        'title_en',
+        'name_ar',
+        'name_en',
         'description_ar',
-        'description_en',
         'department_id',
         'level',
         'min_salary',
         'max_salary',
         'is_medical',
         'requires_license',
-        'is_managerial',
-        'headcount',
         'is_active',
-        'qualifications',
-        'responsibilities',
-        'sort_order',
     ];
 
     protected $casts = [
@@ -38,10 +32,7 @@ class Position extends Model
         'max_salary' => 'decimal:2',
         'is_medical' => 'boolean',
         'requires_license' => 'boolean',
-        'is_managerial' => 'boolean',
         'is_active' => 'boolean',
-        'qualifications' => 'array',
-        'responsibilities' => 'array',
     ];
 
     // =============================================================================
@@ -51,10 +42,10 @@ class Position extends Model
     /**
      * المسمى الوظيفي حسب اللغة الحالية
      */
-    public function getTitleAttribute(): string
+    public function getNameAttribute(): string
     {
         $locale = app()->getLocale();
-        return $locale === 'ar' ? $this->title_ar : $this->title_en;
+        return $locale === 'ar' ? $this->name_ar : ($this->name_en ?: $this->name_ar);
     }
 
     /**
@@ -62,8 +53,7 @@ class Position extends Model
      */
     public function getDescriptionAttribute(): ?string
     {
-        $locale = app()->getLocale();
-        return $locale === 'ar' ? $this->description_ar : $this->description_en;
+        return $this->description_ar;
     }
 
     /**

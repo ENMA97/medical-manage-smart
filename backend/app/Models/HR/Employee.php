@@ -4,6 +4,8 @@ namespace App\Models\HR;
 
 use App\Models\Leave\LeaveBalance;
 use App\Models\Leave\LeaveRequest;
+use App\Models\Payroll\Payroll;
+use App\Models\Payroll\EmployeeLoan;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -220,6 +222,30 @@ class Employee extends Model
     public function leaveRequests(): HasMany
     {
         return $this->hasMany(LeaveRequest::class);
+    }
+
+    /**
+     * مسيرات الرواتب
+     */
+    public function payrolls(): HasMany
+    {
+        return $this->hasMany(Payroll::class);
+    }
+
+    /**
+     * السلف والقروض
+     */
+    public function loans(): HasMany
+    {
+        return $this->hasMany(EmployeeLoan::class);
+    }
+
+    /**
+     * السلف النشطة
+     */
+    public function activeLoans(): HasMany
+    {
+        return $this->hasMany(EmployeeLoan::class)->where('status', 'active');
     }
 
     // =============================================================================

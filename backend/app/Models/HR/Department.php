@@ -18,17 +18,14 @@ class Department extends Model
         'name_ar',
         'name_en',
         'description_ar',
-        'description_en',
         'parent_id',
         'manager_id',
-        'cost_center_id',
-        'is_medical',
+        'cost_center_code',
         'is_active',
         'sort_order',
     ];
 
     protected $casts = [
-        'is_medical' => 'boolean',
         'is_active' => 'boolean',
     ];
 
@@ -116,14 +113,6 @@ class Department extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
-    }
-
-    /**
-     * الأقسام الطبية
-     */
-    public function scopeMedical($query)
-    {
-        return $query->where('is_medical', true);
     }
 
     /**
