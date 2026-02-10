@@ -11,6 +11,8 @@ use App\Models\Leave\LeaveRequest;
 use App\Services\Leave\LeaveRequestService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class LeaveRequestController extends Controller
@@ -20,6 +22,27 @@ class LeaveRequestController extends Controller
     public function __construct(LeaveRequestService $service)
     {
         $this->service = $service;
+    }
+
+    /**
+     * التحقق من صلاحية الموافقة
+     */
+    protected function authorizeApproval(string $permission, LeaveRequest $leaveRequest): ?JsonResponse
+    {
+        if (Gate::denies($permission)) {
+            Log::warning('Unauthorized leave approval attempt', [
+                'user_id' => auth()->id(),
+                'permission' => $permission,
+                'leave_request_id' => $leaveRequest->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية لهذا الإجراء',
+            ], 403);
+        }
+
+        return null;
     }
 
     /**
@@ -91,8 +114,23 @@ class LeaveRequestController extends Controller
     /**
      * تقديم الطلب للموافقة
      */
-    public function submit(LeaveRequest $leaveRequest): JsonResponse
+    public function submit(Request $request, LeaveRequest $leaveRequest): JsonResponse
     {
+        // التحقق من أن المستخدم هو صاحب الطلب
+        $userId = $request->user()->id;
+        if ($leaveRequest->employee_id !== $userId) {
+            Log::warning('Unauthorized leave submit attempt', [
+                'user_id' => $userId,
+                'leave_request_id' => $leaveRequest->id,
+                'employee_id' => $leaveRequest->employee_id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'لا يمكنك تقديم طلب ليس لك',
+            ], 403);
+        }
+
         try {
             $leaveRequest = $this->service->submitRequest($leaveRequest);
 
@@ -116,6 +154,11 @@ class LeaveRequestController extends Controller
         ProcessApprovalRequest $request,
         LeaveRequest $leaveRequest
     ): JsonResponse {
+        // التحقق من أن المستخدم هو مشرف الموظف
+        if ($unauthorized = $this->authorizeApproval('leave.approve_supervisor', $leaveRequest)) {
+            return $unauthorized;
+        }
+
         try {
             $leaveRequest = $this->service->processSupervisorRecommendation(
                 $leaveRequest,
@@ -146,6 +189,11 @@ class LeaveRequestController extends Controller
         ProcessApprovalRequest $request,
         LeaveRequest $leaveRequest
     ): JsonResponse {
+        // التحقق من صلاحية المدير الإداري
+        if ($unauthorized = $this->authorizeApproval('leave.approve_manager', $leaveRequest)) {
+            return $unauthorized;
+        }
+
         try {
             $leaveRequest = $this->service->processAdminManagerApproval(
                 $leaveRequest,
@@ -175,6 +223,11 @@ class LeaveRequestController extends Controller
         ProcessApprovalRequest $request,
         LeaveRequest $leaveRequest
     ): JsonResponse {
+        // التحقق من صلاحية الموارد البشرية
+        if ($unauthorized = $this->authorizeApproval('leave.approve_hr', $leaveRequest)) {
+            return $unauthorized;
+        }
+
         try {
             $leaveRequest = $this->service->processHrEndorsement(
                 $leaveRequest,
@@ -199,15 +252,31 @@ class LeaveRequestController extends Controller
 
     /**
      * معالجة تأكيد القائم بالعمل
+     * ملاحظة: التحقق من هوية القائم بالعمل يتم في Service layer
      */
     public function processDelegateConfirmation(
         ProcessApprovalRequest $request,
         LeaveRequest $leaveRequest
     ): JsonResponse {
+        // التحقق من أن المستخدم هو القائم بالعمل المحدد
+        $userId = $request->user()->id;
+        if ($leaveRequest->delegate_id !== $userId) {
+            Log::warning('Unauthorized delegate confirmation attempt', [
+                'user_id' => $userId,
+                'expected_delegate_id' => $leaveRequest->delegate_id,
+                'leave_request_id' => $leaveRequest->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'لست القائم بالعمل المحدد لهذا الطلب',
+            ], 403);
+        }
+
         try {
             $leaveRequest = $this->service->processDelegateConfirmation(
                 $leaveRequest,
-                $request->user()->id,
+                $userId,
                 $request->approved,
                 $request->comment,
                 $request->ip()
@@ -228,6 +297,7 @@ class LeaveRequestController extends Controller
 
     /**
      * إلغاء طلب الإجازة
+     * يمكن للموظف إلغاء طلبه أو للموارد البشرية إلغاء أي طلب
      */
     public function cancel(Request $request, LeaveRequest $leaveRequest): JsonResponse
     {
@@ -235,11 +305,27 @@ class LeaveRequestController extends Controller
             'reason' => 'required|string|max:500',
         ]);
 
+        $userId = $request->user()->id;
+
+        // التحقق من أن المستخدم هو صاحب الطلب أو لديه صلاحية الإلغاء
+        if ($leaveRequest->employee_id !== $userId && Gate::denies('leave.approve_hr')) {
+            Log::warning('Unauthorized leave cancellation attempt', [
+                'user_id' => $userId,
+                'leave_request_id' => $leaveRequest->id,
+                'employee_id' => $leaveRequest->employee_id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية لإلغاء هذا الطلب',
+            ], 403);
+        }
+
         try {
             $leaveRequest = $this->service->cancelRequest(
                 $leaveRequest,
                 $request->reason,
-                $request->user()->id
+                $userId
             );
 
             return response()->json([

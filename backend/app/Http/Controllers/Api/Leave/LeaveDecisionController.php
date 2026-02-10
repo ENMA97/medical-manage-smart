@@ -12,6 +12,8 @@ use App\Models\Leave\LeaveRequest;
 use App\Services\Leave\LeaveDecisionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class LeaveDecisionController extends Controller
@@ -21,6 +23,26 @@ class LeaveDecisionController extends Controller
     public function __construct(LeaveDecisionService $service)
     {
         $this->service = $service;
+    }
+
+    /**
+     * التحقق من صلاحية اتخاذ القرار
+     */
+    protected function authorizeDecision(string $permission): ?JsonResponse
+    {
+        if (Gate::denies($permission)) {
+            Log::warning('Unauthorized leave decision attempt', [
+                'user_id' => auth()->id(),
+                'permission' => $permission,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية لهذا الإجراء',
+            ], 403);
+        }
+
+        return null;
     }
 
     /**
@@ -88,6 +110,11 @@ class LeaveDecisionController extends Controller
         ProcessDecisionRequest $request,
         LeaveDecision $leaveDecision
     ): JsonResponse {
+        // التحقق من صلاحية المدير الإداري
+        if ($unauthorized = $this->authorizeDecision('leave.approve_manager')) {
+            return $unauthorized;
+        }
+
         try {
             $leaveDecision = $this->service->processAdminManagerDecision(
                 $leaveDecision,
@@ -123,6 +150,11 @@ class LeaveDecisionController extends Controller
         ProcessDecisionRequest $request,
         LeaveDecision $leaveDecision
     ): JsonResponse {
+        // التحقق من صلاحية المدير الطبي (نفس صلاحية المدير لكن للكادر الطبي)
+        if ($unauthorized = $this->authorizeDecision('leave.approve_manager')) {
+            return $unauthorized;
+        }
+
         try {
             $leaveDecision = $this->service->processMedicalDirectorDecision(
                 $leaveDecision,
@@ -158,6 +190,11 @@ class LeaveDecisionController extends Controller
         ProcessDecisionRequest $request,
         LeaveDecision $leaveDecision
     ): JsonResponse {
+        // التحقق من صلاحية المدير العام
+        if ($unauthorized = $this->authorizeDecision('leave.approve_gm')) {
+            return $unauthorized;
+        }
+
         try {
             $leaveDecision = $this->service->processGeneralManagerDecision(
                 $leaveDecision,
@@ -193,8 +230,13 @@ class LeaveDecisionController extends Controller
     /**
      * القرارات المعلقة للمدير العام
      */
-    public function pendingForGM(Request $request): LeaveDecisionCollection
+    public function pendingForGM(Request $request): LeaveDecisionCollection|JsonResponse
     {
+        // التحقق من صلاحية المدير العام
+        if ($unauthorized = $this->authorizeDecision('leave.approve_gm')) {
+            return $unauthorized;
+        }
+
         $decisions = LeaveDecision::where('status', 'pending_general_manager')
             ->with(['leaveRequest.employee', 'leaveRequest.leaveType'])
             ->orderBy('created_at', 'desc')
