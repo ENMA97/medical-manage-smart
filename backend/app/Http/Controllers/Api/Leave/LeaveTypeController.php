@@ -8,6 +8,8 @@ use App\Http\Resources\Leave\LeaveTypeCollection;
 use App\Models\Leave\LeaveType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 class LeaveTypeController extends Controller
 {
@@ -59,6 +61,18 @@ class LeaveTypeController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // التحقق من صلاحية إدارة أنواع الإجازات
+        if (Gate::denies('leave.manage')) {
+            Log::warning('Unauthorized leave type creation attempt', [
+                'user_id' => $request->user()->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية لإنشاء أنواع الإجازات',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'code' => 'required|string|max:20|unique:leave_types,code',
             'name_ar' => 'required|string|max:100',
@@ -97,6 +111,19 @@ class LeaveTypeController extends Controller
      */
     public function update(Request $request, LeaveType $leaveType): JsonResponse
     {
+        // التحقق من صلاحية إدارة أنواع الإجازات
+        if (Gate::denies('leave.manage')) {
+            Log::warning('Unauthorized leave type update attempt', [
+                'user_id' => $request->user()->id,
+                'leave_type_id' => $leaveType->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية لتعديل أنواع الإجازات',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'code' => 'sometimes|required|string|max:20|unique:leave_types,code,' . $leaveType->id,
             'name_ar' => 'sometimes|required|string|max:100',
@@ -133,8 +160,21 @@ class LeaveTypeController extends Controller
     /**
      * حذف نوع إجازة
      */
-    public function destroy(LeaveType $leaveType): JsonResponse
+    public function destroy(Request $request, LeaveType $leaveType): JsonResponse
     {
+        // التحقق من صلاحية إدارة أنواع الإجازات
+        if (Gate::denies('leave.manage')) {
+            Log::warning('Unauthorized leave type deletion attempt', [
+                'user_id' => $request->user()->id,
+                'leave_type_id' => $leaveType->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية لحذف أنواع الإجازات',
+            ], 403);
+        }
+
         // التحقق من عدم وجود طلبات إجازة مرتبطة
         if ($leaveType->leaveRequests()->exists()) {
             return response()->json([
@@ -142,6 +182,11 @@ class LeaveTypeController extends Controller
                 'message' => 'لا يمكن حذف نوع الإجازة لوجود طلبات مرتبطة به',
             ], 400);
         }
+
+        Log::info('Leave type deleted', [
+            'leave_type_id' => $leaveType->id,
+            'deleted_by' => $request->user()->id,
+        ]);
 
         $leaveType->delete();
 

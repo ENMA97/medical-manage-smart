@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Leave\LeavePolicy;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 class LeavePolicyController extends Controller
 {
@@ -73,6 +75,18 @@ class LeavePolicyController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // التحقق من صلاحية إدارة السياسات
+        if (Gate::denies('leave.manage')) {
+            Log::warning('Unauthorized leave policy creation attempt', [
+                'user_id' => $request->user()->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية لإنشاء سياسات الإجازات',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'leave_type_id' => 'required|uuid|exists:leave_types,id',
             'contract_type' => 'required|in:full_time,part_time,tamheer,percentage,locum',
@@ -118,6 +132,19 @@ class LeavePolicyController extends Controller
      */
     public function update(Request $request, LeavePolicy $leavePolicy): JsonResponse
     {
+        // التحقق من صلاحية إدارة السياسات
+        if (Gate::denies('leave.manage')) {
+            Log::warning('Unauthorized leave policy update attempt', [
+                'user_id' => $request->user()->id,
+                'policy_id' => $leavePolicy->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية لتعديل سياسات الإجازات',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'leave_type_id' => 'sometimes|required|uuid|exists:leave_types,id',
             'contract_type' => 'sometimes|required|in:full_time,part_time,tamheer,percentage,locum',
@@ -138,6 +165,11 @@ class LeavePolicyController extends Controller
 
         $leavePolicy->update($validated);
 
+        Log::info('Leave policy updated', [
+            'policy_id' => $leavePolicy->id,
+            'updated_by' => $request->user()->id,
+        ]);
+
         return response()->json([
             'success' => true,
             'message' => 'تم تحديث السياسة بنجاح',
@@ -148,8 +180,26 @@ class LeavePolicyController extends Controller
     /**
      * حذف سياسة
      */
-    public function destroy(LeavePolicy $leavePolicy): JsonResponse
+    public function destroy(Request $request, LeavePolicy $leavePolicy): JsonResponse
     {
+        // التحقق من صلاحية إدارة السياسات
+        if (Gate::denies('leave.manage')) {
+            Log::warning('Unauthorized leave policy deletion attempt', [
+                'user_id' => $request->user()->id,
+                'policy_id' => $leavePolicy->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية لحذف سياسات الإجازات',
+            ], 403);
+        }
+
+        Log::info('Leave policy deleted', [
+            'policy_id' => $leavePolicy->id,
+            'deleted_by' => $request->user()->id,
+        ]);
+
         $leavePolicy->delete();
 
         return response()->json([
