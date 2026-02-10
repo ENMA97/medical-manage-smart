@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Payroll\EmployeeLoan;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 class LoanController extends Controller
 {
@@ -14,6 +16,14 @@ class LoanController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        // التحقق من صلاحية عرض السلف
+        if (Gate::denies('payroll.view')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية لعرض السلف',
+            ], 403);
+        }
+
         $query = EmployeeLoan::with(['employee:id,name_ar,name_en,employee_number']);
 
         if ($request->has('employee_id')) {
@@ -85,6 +95,19 @@ class LoanController extends Controller
      */
     public function approve(EmployeeLoan $loan, Request $request): JsonResponse
     {
+        // التحقق من صلاحية الموافقة على السلف
+        if (Gate::denies('payroll.approve')) {
+            Log::warning('Unauthorized loan approval attempt', [
+                'user_id' => $request->user()->id,
+                'loan_id' => $loan->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية للموافقة على السلف',
+            ], 403);
+        }
+
         if ($loan->status !== EmployeeLoan::STATUS_PENDING) {
             return response()->json([
                 'success' => false,
@@ -94,6 +117,11 @@ class LoanController extends Controller
 
         $loan->approve($request->user()->id);
         $loan->activate();
+
+        Log::info('Loan approved', [
+            'loan_id' => $loan->id,
+            'approved_by' => $request->user()->id,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -107,6 +135,19 @@ class LoanController extends Controller
      */
     public function reject(EmployeeLoan $loan, Request $request): JsonResponse
     {
+        // التحقق من صلاحية رفض السلف
+        if (Gate::denies('payroll.approve')) {
+            Log::warning('Unauthorized loan rejection attempt', [
+                'user_id' => $request->user()->id,
+                'loan_id' => $loan->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية لرفض السلف',
+            ], 403);
+        }
+
         $request->validate([
             'reason' => 'required|string|max:500',
         ]);
@@ -119,6 +160,12 @@ class LoanController extends Controller
         }
 
         $loan->reject($request->user()->id, $request->reason);
+
+        Log::info('Loan rejected', [
+            'loan_id' => $loan->id,
+            'rejected_by' => $request->user()->id,
+            'reason' => $request->reason,
+        ]);
 
         return response()->json([
             'success' => true,

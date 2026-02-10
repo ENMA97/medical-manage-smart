@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Payroll\PayrollSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 class PayrollSettingsController extends Controller
 {
@@ -14,6 +16,14 @@ class PayrollSettingsController extends Controller
      */
     public function index(): JsonResponse
     {
+        // التحقق من صلاحية عرض الإعدادات
+        if (Gate::denies('system.settings')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية لعرض الإعدادات',
+            ], 403);
+        }
+
         $settings = [];
 
         foreach (PayrollSettings::DEFAULTS as $key => $config) {
@@ -39,6 +49,19 @@ class PayrollSettingsController extends Controller
      */
     public function update(string $key, Request $request): JsonResponse
     {
+        // التحقق من صلاحية تعديل الإعدادات
+        if (Gate::denies('system.settings')) {
+            Log::warning('Unauthorized settings update attempt', [
+                'user_id' => $request->user()->id,
+                'setting_key' => $key,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية لتعديل الإعدادات',
+            ], 403);
+        }
+
         if (!array_key_exists($key, PayrollSettings::DEFAULTS)) {
             return response()->json([
                 'success' => false,
@@ -69,7 +92,15 @@ class PayrollSettingsController extends Controller
             ], 400);
         }
 
+        $oldValue = PayrollSettings::getValue($key);
         PayrollSettings::setValue($key, $value);
+
+        Log::info('Payroll setting updated', [
+            'key' => $key,
+            'old_value' => $oldValue,
+            'new_value' => $value,
+            'updated_by' => $request->user()->id,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -84,10 +115,26 @@ class PayrollSettingsController extends Controller
     /**
      * إعادة تعيين الإعدادات الافتراضية
      */
-    public function resetDefaults(): JsonResponse
+    public function resetDefaults(Request $request): JsonResponse
     {
+        // التحقق من صلاحية إعادة التعيين (يتطلب صلاحية مدير النظام)
+        if (Gate::denies('system.settings')) {
+            Log::warning('Unauthorized settings reset attempt', [
+                'user_id' => $request->user()->id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'ليس لديك صلاحية لإعادة تعيين الإعدادات',
+            ], 403);
+        }
+
         PayrollSettings::truncate();
         PayrollSettings::seedDefaults();
+
+        Log::info('Payroll settings reset to defaults', [
+            'reset_by' => $request->user()->id,
+        ]);
 
         return response()->json([
             'success' => true,
