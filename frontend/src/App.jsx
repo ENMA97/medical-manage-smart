@@ -40,6 +40,7 @@ const PurchaseRequestsPage = lazy(() => import('./pages/inventory/PurchaseReques
 
 // Roster - Placeholder pages
 const ShiftPatternsPage = lazy(() => import('./pages/roster/ShiftPatternsPage'));
+const RostersPage = lazy(() => import('./pages/roster/RostersPage'));
 const AttendancePage = lazy(() => import('./pages/roster/AttendancePage'));
 const ShiftSwapsPage = lazy(() => import('./pages/roster/ShiftSwapsPage'));
 
@@ -143,6 +144,7 @@ export default function App() {
           {/* Roster Module */}
           <Route path="/roster">
             <Route path="shifts" element={<ShiftPatternsPage />} />
+            <Route path="schedule" element={<RostersPage />} />
             <Route path="attendance" element={<AttendancePage />} />
             <Route path="swaps" element={<ShiftSwapsPage />} />
           </Route>
