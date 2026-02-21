@@ -164,6 +164,21 @@ export default function PayrollListPage() {
     setPayrolls(prev => prev.map(p => p.id === id ? { ...p, status: 'paid' } : p));
   };
 
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('ar-SA', {
+      style: 'currency', currency: 'SAR', minimumFractionDigits: 0
+    }).format(amount || 0);
+  };
+
+  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
+
+  // تعريف filteredPayrolls قبل استخدامه في الدوال
+  const filteredPayrolls = payrolls.filter(p => {
+    if (filterStatus && p.status !== filterStatus) return false;
+    if (searchTerm && !p.employee.name_ar.includes(searchTerm) && !p.employee.employee_number.includes(searchTerm)) return false;
+    return true;
+  });
+
   const togglePayrollSelection = (id) => {
     setSelectedPayrolls(prev =>
       prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
@@ -177,20 +192,6 @@ export default function PayrollListPage() {
       setSelectedPayrolls(filteredPayrolls.map(p => p.id));
     }
   };
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('ar-SA', {
-      style: 'currency', currency: 'SAR', minimumFractionDigits: 0
-    }).format(amount || 0);
-  };
-
-  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
-
-  const filteredPayrolls = payrolls.filter(p => {
-    if (filterStatus && p.status !== filterStatus) return false;
-    if (searchTerm && !p.employee.name_ar.includes(searchTerm) && !p.employee.employee_number.includes(searchTerm)) return false;
-    return true;
-  });
 
   const openPayslip = (payroll) => {
     setSelectedPayroll(payroll);

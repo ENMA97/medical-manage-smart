@@ -9,7 +9,7 @@ const API_BASE = '/api/leaves';
  * Helper function for API calls
  */
 async function apiCall(endpoint, options = {}) {
-  const token = localStorage.getItem('auth_token');
+  const token = localStorage.getItem('token');
 
   const config = {
     headers: {

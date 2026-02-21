@@ -478,7 +478,7 @@ export default function InventoryItemsPage() {
                         </span>
                       </div>
                       {item.is_controlled && (
-                        <Badge variant="danger\" size="sm" className="mt-1">
+                        <Badge variant="danger" size="sm" className="mt-1">
                           مادة خاضعة للرقابة
                         </Badge>
                       )}
