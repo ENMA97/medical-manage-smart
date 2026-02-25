@@ -5,7 +5,7 @@ import clsx from 'clsx';
  * مكون دائرة التحميل
  * Loading Spinner Component
  */
-export default function LoadingSpinner({ size = 'md', className = '', color = 'primary' }) {
+export default function LoadingSpinner({ size = 'md', className = '', color = 'primary', label }) {
   const sizeClasses = {
     sm: 'h-4 w-4 border-2',
     md: 'h-8 w-8 border-2',
@@ -28,9 +28,9 @@ export default function LoadingSpinner({ size = 'md', className = '', color = 'p
         className
       )}
       role="status"
-      aria-label="Loading"
+      aria-label={label || 'Loading'}
     >
-      <span className="sr-only">Loading...</span>
+      <span className="sr-only">{label || 'Loading...'}</span>
     </div>
   );
 }

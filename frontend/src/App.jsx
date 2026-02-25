@@ -58,8 +58,9 @@ const PermissionsPage = lazy(() => import('./pages/system/PermissionsPage'));
 const AuditLogsPage = lazy(() => import('./pages/system/AuditLogsPage'));
 const SystemSettingsPage = lazy(() => import('./pages/system/SystemSettingsPage'));
 
-// 404
+// 404 & Error Pages
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
+const UnauthorizedPage = lazy(() => import('./pages/UnauthorizedPage'));
 
 // Loading fallback component
 function PageLoader() {
@@ -167,6 +168,9 @@ export default function App() {
             <Route path="settings" element={<SystemSettingsPage />} />
           </Route>
         </Route>
+
+        {/* Unauthorized Access */}
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
         {/* 404 - Not Found */}
         <Route path="*" element={<NotFoundPage />} />

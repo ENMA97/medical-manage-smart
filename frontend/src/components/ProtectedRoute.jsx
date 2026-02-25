@@ -6,6 +6,15 @@ import LoadingSpinner from './ui/LoadingSpinner';
 /**
  * مكون الحماية للمسارات المحمية
  * Protected Route Component
+ *
+ * @param {Object} props
+ * @param {React.ReactNode} props.children - المحتوى المحمي
+ * @param {string} [props.permission] - صلاحية واحدة مطلوبة
+ * @param {string[]} [props.permissions] - قائمة صلاحيات مطلوبة
+ * @param {boolean} [props.requireAll=false] - هل يجب توفر جميع الصلاحيات
+ * @param {string[]} [props.roles] - قائمة الأدوار المسموح بها
+ * @param {string} [props.fallback] - مسار إعادة التوجيه عند عدم الصلاحية
+ * @param {boolean} [props.showUnauthorized=true] - عرض صفحة عدم الصلاحية بدلاً من إعادة التوجيه
  */
 export default function ProtectedRoute({
   children,
@@ -13,11 +22,30 @@ export default function ProtectedRoute({
   permissions,
   requireAll = false,
   roles,
-  fallback = '/login',
+  fallback,
+  showUnauthorized = true,
 }) {
-  const { isAuthenticated, loading, hasPermission, hasAnyPermission, hasAllPermissions, hasRole } =
-    useAuth();
+  const {
+    isAuthenticated,
+    loading,
+    hasPermission,
+    hasAnyPermission,
+    hasAllPermissions,
+    hasRole,
+    hasAnyRole,
+  } = useAuth();
   const location = useLocation();
+
+  // Validate permission prop
+  const validPermission = typeof permission === 'string' && permission.trim() !== '';
+
+  // Validate permissions array prop
+  const validPermissions = Array.isArray(permissions) && permissions.length > 0 &&
+    permissions.every((p) => typeof p === 'string' && p.trim() !== '');
+
+  // Validate roles array prop
+  const validRoles = Array.isArray(roles) && roles.length > 0 &&
+    roles.every((r) => typeof r === 'string' && r.trim() !== '');
 
   // Show loading spinner while checking auth
   if (loading) {
@@ -33,29 +61,118 @@ export default function ProtectedRoute({
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Check authorization
+  let isAuthorized = true;
+  let authCheckPerformed = false;
+
   // Check single permission
-  if (permission && !hasPermission(permission)) {
-    return <Navigate to={fallback} replace />;
+  if (validPermission) {
+    authCheckPerformed = true;
+    if (!hasPermission(permission)) {
+      isAuthorized = false;
+    }
   }
 
   // Check multiple permissions
-  if (permissions && permissions.length > 0) {
+  if (isAuthorized && validPermissions) {
+    authCheckPerformed = true;
     const hasAccess = requireAll
       ? hasAllPermissions(permissions)
       : hasAnyPermission(permissions);
 
     if (!hasAccess) {
-      return <Navigate to={fallback} replace />;
+      isAuthorized = false;
     }
   }
 
   // Check roles
-  if (roles && roles.length > 0) {
-    const hasRoleAccess = roles.some((role) => hasRole(role));
+  if (isAuthorized && validRoles) {
+    authCheckPerformed = true;
+    // Use hasAnyRole if available, otherwise fallback to checking each role
+    const hasRoleAccess = hasAnyRole
+      ? hasAnyRole(roles)
+      : roles.some((role) => hasRole(role));
+
     if (!hasRoleAccess) {
-      return <Navigate to={fallback} replace />;
+      isAuthorized = false;
     }
   }
 
+  // Handle unauthorized access
+  if (!isAuthorized) {
+    // If fallback is provided, redirect to it
+    if (fallback) {
+      return <Navigate to={fallback} state={{ from: location }} replace />;
+    }
+
+    // Show unauthorized page
+    if (showUnauthorized) {
+      return <Navigate to="/unauthorized" state={{ from: location }} replace />;
+    }
+
+    // Default: redirect to home
+    return <Navigate to="/" replace />;
+  }
+
   return children;
+}
+
+/**
+ * مكون تحقق من صلاحية واحدة
+ * Single Permission Check Component
+ */
+export function RequirePermission({ permission, children, fallback }) {
+  return (
+    <ProtectedRoute permission={permission} fallback={fallback}>
+      {children}
+    </ProtectedRoute>
+  );
+}
+
+/**
+ * مكون تحقق من أي صلاحية من القائمة
+ * Any Permission Check Component
+ */
+export function RequireAnyPermission({ permissions, children, fallback }) {
+  return (
+    <ProtectedRoute permissions={permissions} requireAll={false} fallback={fallback}>
+      {children}
+    </ProtectedRoute>
+  );
+}
+
+/**
+ * مكون تحقق من جميع الصلاحيات
+ * All Permissions Check Component
+ */
+export function RequireAllPermissions({ permissions, children, fallback }) {
+  return (
+    <ProtectedRoute permissions={permissions} requireAll={true} fallback={fallback}>
+      {children}
+    </ProtectedRoute>
+  );
+}
+
+/**
+ * مكون تحقق من دور معين
+ * Role Check Component
+ */
+export function RequireRole({ role, children, fallback }) {
+  return (
+    <ProtectedRoute roles={[role]} fallback={fallback}>
+      {children}
+    </ProtectedRoute>
+  );
+}
+
+/**
+ * مكون تحقق من أي دور من القائمة
+ * Any Role Check Component
+ */
+export function RequireAnyRole({ roles, children, fallback }) {
+  return (
+    <ProtectedRoute roles={roles} fallback={fallback}>
+      {children}
+    </ProtectedRoute>
+  );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
 import { useLocale } from '../../contexts/LocaleContext';
@@ -98,11 +98,11 @@ const navigation = [
   },
 ];
 
-function NavItem({ item, isCollapsed }) {
+function NavItem({ item, isCollapsed, index }) {
   const { t, isRTL } = useLocale();
-  const { hasAnyPermission } = useAuth();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const menuId = `nav-menu-${item.name.replace('.', '-')}`;
 
   const isActive = item.href
     ? location.pathname === item.href
@@ -120,6 +120,13 @@ function NavItem({ item, isCollapsed }) {
     }
   }, [hasActiveChild]);
 
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      setIsOpen((prev) => !prev);
+    }
+  }, []);
+
   if (item.href) {
     return (
       <NavLink
@@ -133,17 +140,19 @@ function NavItem({ item, isCollapsed }) {
           )
         }
         title={isCollapsed ? t(item.name) : undefined}
+        aria-current={location.pathname === item.href ? 'page' : undefined}
       >
-        <item.icon className="w-5 h-5 flex-shrink-0" />
+        <item.icon className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
         {!isCollapsed && <span>{t(item.name)}</span>}
       </NavLink>
     );
   }
 
   return (
-    <div>
+    <div role="none">
       <button
         onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={handleKeyDown}
         className={clsx(
           'flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm font-medium transition-colors',
           isActive || hasActiveChild
@@ -151,9 +160,12 @@ function NavItem({ item, isCollapsed }) {
             : 'text-gray-700 hover:bg-gray-100'
         )}
         title={isCollapsed ? t(item.name) : undefined}
+        aria-expanded={isOpen}
+        aria-controls={menuId}
+        aria-haspopup="true"
       >
         <div className="flex items-center gap-3">
-          <item.icon className="w-5 h-5 flex-shrink-0" />
+          <item.icon className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
           {!isCollapsed && <span>{t(item.name)}</span>}
         </div>
         {!isCollapsed && (
@@ -162,11 +174,20 @@ function NavItem({ item, isCollapsed }) {
               'w-4 h-4 transition-transform',
               isOpen && 'rotate-180'
             )}
+            aria-hidden="true"
           />
         )}
       </button>
-      {!isCollapsed && isOpen && item.children && (
-        <div className="mt-1 ms-4 ps-4 border-s border-gray-200 space-y-1">
+      {!isCollapsed && item.children && (
+        <div
+          id={menuId}
+          className={clsx(
+            'mt-1 ms-4 ps-4 border-s border-gray-200 space-y-1',
+            !isOpen && 'hidden'
+          )}
+          role="menu"
+          aria-label={t(item.name)}
+        >
           {item.children.map((child) => (
             <NavLink
               key={child.href}
@@ -179,6 +200,8 @@ function NavItem({ item, isCollapsed }) {
                     : 'text-gray-600 hover:bg-gray-100'
                 )
               }
+              role="menuitem"
+              aria-current={location.pathname === child.href ? 'page' : undefined}
             >
               {t(child.name)}
             </NavLink>
@@ -190,10 +213,14 @@ function NavItem({ item, isCollapsed }) {
 }
 
 export default function Sidebar({ isCollapsed, onToggle }) {
-  const { t, isRTL } = useLocale();
+  const { t, isRTL, locale } = useLocale();
   const ChevronIcon = isRTL
     ? isCollapsed ? HiChevronLeft : HiChevronRight
     : isCollapsed ? HiChevronRight : HiChevronLeft;
+
+  const toggleLabel = locale === 'ar'
+    ? isCollapsed ? 'توسيع القائمة' : 'تصغير القائمة'
+    : isCollapsed ? 'Expand sidebar' : 'Collapse sidebar';
 
   return (
     <aside
@@ -201,6 +228,8 @@ export default function Sidebar({ isCollapsed, onToggle }) {
         'fixed inset-y-0 start-0 z-30 flex flex-col bg-white border-e border-gray-200 transition-all duration-300',
         isCollapsed ? 'w-16' : 'w-64'
       )}
+      role="navigation"
+      aria-label={locale === 'ar' ? 'القائمة الرئيسية' : 'Main navigation'}
     >
       {/* Logo */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
@@ -211,22 +240,27 @@ export default function Sidebar({ isCollapsed, onToggle }) {
         )}
         <button
           onClick={onToggle}
-          className="p-2 rounded-lg text-gray-500 hover:bg-gray-100"
+          className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+          aria-label={toggleLabel}
+          aria-expanded={!isCollapsed}
         >
-          <ChevronIcon className="w-5 h-5" />
+          <ChevronIcon className="w-5 h-5" aria-hidden="true" />
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-thin">
-        {navigation.map((item) => (
-          <NavItem key={item.name} item={item} isCollapsed={isCollapsed} />
+      <nav
+        className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-thin"
+        aria-label={locale === 'ar' ? 'قائمة التنقل' : 'Navigation menu'}
+      >
+        {navigation.map((item, index) => (
+          <NavItem key={item.name} item={item} isCollapsed={isCollapsed} index={index} />
         ))}
       </nav>
 
       {/* Version */}
       {!isCollapsed && (
-        <div className="p-4 border-t border-gray-200 text-xs text-gray-500 text-center">
+        <div className="p-4 border-t border-gray-200 text-xs text-gray-500 text-center" aria-label="Version">
           v1.0.0
         </div>
       )}
