@@ -5,6 +5,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import MainLayout from './layouts/MainLayout';
 import Login from './pages/auth/Login';
 import Dashboard from './pages/Dashboard';
+import ImportEmployees from './pages/ImportEmployees';
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
             }
           >
             <Route path="/" element={<Dashboard />} />
+            <Route path="/import" element={<ImportEmployees />} />
           </Route>
 
           {/* Catch-all */}

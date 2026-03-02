@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ImportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,6 +30,12 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::post('/logout-all', [AuthController::class, 'logoutAll']);
         Route::put('/fcm-token', [AuthController::class, 'updateFcmToken']);
         Route::put('/language', [AuthController::class, 'updateLanguage']);
+    });
+
+    // ── Import (استيراد الملفات) ──
+    Route::prefix('import')->group(function () {
+        Route::post('/employees', [ImportController::class, 'importEmployees']);
+        Route::get('/template', [ImportController::class, 'downloadTemplate']);
     });
 
     // ─── باقي مسارات الـ API تُضاف هنا لاحقاً ───
