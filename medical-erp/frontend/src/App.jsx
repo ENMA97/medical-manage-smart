@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import InstallPrompt from './components/common/InstallPrompt';
 import MainLayout from './layouts/MainLayout';
 import Login from './pages/auth/Login';
 import Dashboard from './pages/Dashboard';
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 
+        <InstallPrompt />
         <Toaster
           position="top-center"
           toastOptions={{

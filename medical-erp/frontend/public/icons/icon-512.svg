@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#2563EB"/>
+  <g transform="translate(128, 80)" fill="none" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Building -->
+    <rect x="32" y="40" width="192" height="280" rx="8" fill="none"/>
+    <line x1="128" y1="0" x2="128" y2="40"/>
+    <line x1="108" y1="0" x2="148" y2="0"/>
+    <!-- Windows -->
+    <rect x="64" y="72" width="32" height="32" rx="4"/>
+    <rect x="160" y="72" width="32" height="32" rx="4"/>
+    <rect x="64" y="136" width="32" height="32" rx="4"/>
+    <rect x="160" y="136" width="32" height="32" rx="4"/>
+    <rect x="64" y="200" width="32" height="32" rx="4"/>
+    <rect x="160" y="200" width="32" height="32" rx="4"/>
+    <!-- Door -->
+    <rect x="100" y="264" width="56" height="56" rx="4"/>
+    <!-- Medical Cross -->
+    <line x1="128" y1="272" x2="128" y2="312"/>
+    <line x1="108" y1="292" x2="148" y2="292"/>
+  </g>
+</svg>

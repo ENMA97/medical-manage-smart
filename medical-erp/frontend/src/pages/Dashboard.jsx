@@ -5,15 +5,15 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">
+      <div className="mb-4 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
           مرحباً، {user?.full_name}
         </h1>
-        <p className="text-gray-500 mt-1">لوحة التحكم الرئيسية</p>
+        <p className="text-gray-500 mt-1 text-sm sm:text-base">لوحة التحكم الرئيسية</p>
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-8">
         <StatCard
           title="القسم"
           value={user?.employee?.department?.name_ar || '—'}
@@ -57,8 +57,8 @@ export default function Dashboard() {
       </div>
 
       {/* Profile Card */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">معلومات الملف الشخصي</h2>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+        <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">معلومات الملف الشخصي</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InfoRow label="الاسم الكامل" value={user?.full_name} />
           <InfoRow label="اسم المستخدم" value={user?.username} />
@@ -81,14 +81,14 @@ function StatCard({ title, value, icon, color }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colors[color]}`}>
+    <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-5">
+      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center ${colors[color]}`}>
           {icon}
         </div>
-        <span className="text-sm text-gray-500">{title}</span>
+        <span className="text-xs sm:text-sm text-gray-500">{title}</span>
       </div>
-      <p className="text-lg font-semibold text-gray-800">{value}</p>
+      <p className="text-sm sm:text-lg font-semibold text-gray-800 truncate">{value}</p>
     </div>
   );
 }
