@@ -1,0 +1,204 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: medical_erp_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: medical_erp
+      POSTGRES_USER: ${DB_USERNAME:-erp_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - medical_erp_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-erp_user} -d medical_erp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Caching & Queues
+  redis:
+    image: redis:7-alpine
+    container_name: medical_erp_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - medical_erp_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Laravel Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: medical_erp_backend
+    restart: unless-stopped
+    working_dir: /var/www/html
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: medical_erp
+      DB_USERNAME: ${DB_USERNAME:-erp_user}
+      DB_PASSWORD: ${DB_PASSWORD:-secure_password}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CACHE_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: redis
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    volumes:
+      - ./backend:/var/www/html
+      - backend_storage:/var/www/html/storage
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - medical_erp_network
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  # Laravel Queue Worker
+  queue:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: medical_erp_queue
+    restart: unless-stopped
+    working_dir: /var/www/html
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: medical_erp
+      DB_USERNAME: ${DB_USERNAME:-erp_user}
+      DB_PASSWORD: ${DB_PASSWORD:-secure_password}
+      REDIS_HOST: redis
+      QUEUE_CONNECTION: redis
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - backend
+    networks:
+      - medical_erp_network
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+
+  # Laravel Scheduler
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: medical_erp_scheduler
+    restart: unless-stopped
+    working_dir: /var/www/html
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_DATABASE: medical_erp
+      DB_USERNAME: ${DB_USERNAME:-erp_user}
+      DB_PASSWORD: ${DB_PASSWORD:-secure_password}
+      REDIS_HOST: redis
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - backend
+    networks:
+      - medical_erp_network
+    command: >
+      sh -c "while true; do
+        php artisan schedule:run --verbose --no-interaction &
+        sleep 60
+      done"
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: ${BUILD_TARGET:-development}
+    container_name: medical_erp_frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api}
+      VITE_APP_NAME: "Medical ERP Smart"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - medical_erp_network
+
+  # Nginx Reverse Proxy (Production)
+  nginx:
+    image: nginx:alpine
+    container_name: medical_erp_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - medical_erp_network
+    profiles:
+      - production
+
+  # Biometric Sync Agent (for ZKTeco devices)
+  biometric-agent:
+    build:
+      context: ./docker/biometric-agent
+      dockerfile: Dockerfile
+    container_name: medical_erp_biometric
+    restart: unless-stopped
+    environment:
+      API_BASE_URL: http://backend:8000/api
+      API_TOKEN: ${BIOMETRIC_API_TOKEN}
+      SYNC_INTERVAL: ${BIOMETRIC_SYNC_INTERVAL:-300}
+    depends_on:
+      - backend
+    networks:
+      - medical_erp_network
+    profiles:
+      - with-biometric
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_storage:
+    driver: local
+
+networks:
+  medical_erp_network:
+    driver: bridge
