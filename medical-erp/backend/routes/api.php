@@ -22,19 +22,20 @@ use Illuminate\Support\Facades\Route;
 |
 | المصادقة: الرقم الوظيفي + رقم الهاتف
 | الحماية: Laravel Sanctum (Bearer Token)
+| الصلاحيات: role:super_admin,hr_manager,department_manager,employee
 |
 */
 
 // ─── Public Routes (بدون مصادقة) ───
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])
-        ->middleware('throttle:10,1'); // 10 محاولات في الدقيقة
+        ->middleware('throttle:10,1');
 });
 
 // ─── Protected Routes (تتطلب مصادقة) ───
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
-    // ── Auth ──
+    // ── Auth (جميع المستخدمين) ──
     Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -43,54 +44,14 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::put('/language', [AuthController::class, 'updateLanguage']);
     });
 
-    // ── Import (استيراد الملفات) ──
-    Route::prefix('import')->group(function () {
-        Route::post('/employees', [ImportController::class, 'importEmployees']);
-        Route::get('/template', [ImportController::class, 'downloadTemplate']);
-    });
-
-    // ── Employees (الموظفون) ──
-    Route::apiResource('employees', EmployeeController::class);
-    Route::get('employees/{employee}/documents', [EmployeeController::class, 'documents']);
-
-    // ── Departments (الأقسام) ──
-    Route::apiResource('departments', DepartmentController::class);
-
-    // ── Contracts (العقود) ──
-    Route::apiResource('contracts', ContractController::class)->except(['destroy']);
-    Route::post('contracts/{contract}/renew', [ContractController::class, 'renew']);
-
-    // ── Leave Types (أنواع الإجازات) ──
-    Route::apiResource('leave-types', LeaveTypeController::class)->except(['destroy']);
-
-    // ── Leave Requests (طلبات الإجازة) ──
-    Route::apiResource('leave-requests', LeaveRequestController::class)->only(['index', 'store', 'show']);
-    Route::post('leave-requests/{leaveRequest}/approve', [LeaveRequestController::class, 'approve']);
-    Route::post('leave-requests/{leaveRequest}/reject', [LeaveRequestController::class, 'reject']);
-    Route::post('leave-requests/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel']);
-
-    // ── Payroll (الرواتب) ──
-    Route::apiResource('payrolls', PayrollController::class)->only(['index', 'store', 'show']);
-    Route::post('payrolls/{payroll}/approve', [PayrollController::class, 'approve']);
-    Route::get('payrolls/{payroll}/export', [PayrollController::class, 'export']);
-
-    // ── Custody (العهد) ──
-    Route::apiResource('custody', CustodyController::class)->only(['index', 'store', 'show']);
-    Route::post('custody/{custody}/return', [CustodyController::class, 'return']);
-
-    // ── Resignations (الاستقالات) ──
-    Route::apiResource('resignations', ResignationController::class)->only(['index', 'store', 'show']);
-    Route::post('resignations/{resignation}/approve', [ResignationController::class, 'approve']);
-    Route::post('resignations/{resignation}/reject', [ResignationController::class, 'reject']);
-
-    // ── Notifications (الإشعارات) ──
+    // ── Notifications (جميع المستخدمين) ──
     Route::prefix('notifications')->group(function () {
         Route::get('/', [NotificationController::class, 'index']);
         Route::put('/{notification}/read', [NotificationController::class, 'markAsRead']);
         Route::put('/read-all', [NotificationController::class, 'markAllAsRead']);
     });
 
-    // ── Dashboard (لوحة التحكم) ──
+    // ── Dashboard (جميع المستخدمين) ──
     Route::prefix('dashboard')->group(function () {
         Route::get('/summary', [DashboardController::class, 'summary']);
         Route::get('/employee-stats', [DashboardController::class, 'employeeStats']);
@@ -98,9 +59,61 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('/alerts', [DashboardController::class, 'alerts']);
     });
 
-    // ── System Settings (إعدادات النظام) ──
-    Route::prefix('settings')->group(function () {
-        Route::get('/', [SystemSettingController::class, 'index']);
-        Route::put('/{setting}', [SystemSettingController::class, 'update']);
+    // ── Leave Requests — تقديم/إلغاء (جميع المستخدمين) ──
+    Route::get('leave-requests', [LeaveRequestController::class, 'index']);
+    Route::post('leave-requests', [LeaveRequestController::class, 'store']);
+    Route::get('leave-requests/{leaveRequest}', [LeaveRequestController::class, 'show']);
+    Route::post('leave-requests/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel']);
+
+    // ── Resignations — تقديم (جميع المستخدمين) ──
+    Route::get('resignations', [ResignationController::class, 'index']);
+    Route::post('resignations', [ResignationController::class, 'store']);
+    Route::get('resignations/{resignation}', [ResignationController::class, 'show']);
+
+    // ─── HR & Admin Routes (مدير النظام + مدير الموارد البشرية) ───
+    Route::middleware('role:super_admin,hr_manager')->group(function () {
+
+        // ── Import ──
+        Route::prefix('import')->group(function () {
+            Route::post('/employees', [ImportController::class, 'importEmployees']);
+            Route::get('/template', [ImportController::class, 'downloadTemplate']);
+        });
+
+        // ── Employees (CRUD كامل) ──
+        Route::apiResource('employees', EmployeeController::class);
+        Route::get('employees/{employee}/documents', [EmployeeController::class, 'documents']);
+
+        // ── Departments ──
+        Route::apiResource('departments', DepartmentController::class);
+
+        // ── Contracts ──
+        Route::apiResource('contracts', ContractController::class)->except(['destroy']);
+        Route::post('contracts/{contract}/renew', [ContractController::class, 'renew']);
+
+        // ── Leave Types ──
+        Route::apiResource('leave-types', LeaveTypeController::class)->except(['destroy']);
+
+        // ── Leave Approval (قبول/رفض) ──
+        Route::post('leave-requests/{leaveRequest}/approve', [LeaveRequestController::class, 'approve']);
+        Route::post('leave-requests/{leaveRequest}/reject', [LeaveRequestController::class, 'reject']);
+
+        // ── Payroll ──
+        Route::apiResource('payrolls', PayrollController::class)->only(['index', 'store', 'show']);
+        Route::post('payrolls/{payroll}/approve', [PayrollController::class, 'approve']);
+        Route::get('payrolls/{payroll}/export', [PayrollController::class, 'export']);
+
+        // ── Custody ──
+        Route::apiResource('custody', CustodyController::class)->only(['index', 'store', 'show']);
+        Route::post('custody/{custody}/return', [CustodyController::class, 'return']);
+
+        // ── Resignations Approval ──
+        Route::post('resignations/{resignation}/approve', [ResignationController::class, 'approve']);
+        Route::post('resignations/{resignation}/reject', [ResignationController::class, 'reject']);
+
+        // ── System Settings ──
+        Route::prefix('settings')->group(function () {
+            Route::get('/', [SystemSettingController::class, 'index']);
+            Route::put('/{setting}', [SystemSettingController::class, 'update']);
+        });
     });
 });

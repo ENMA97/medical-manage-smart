@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Payroll\StorePayrollRequest;
 use App\Models\Contract;
 use App\Models\Employee;
 use App\Models\Payroll;
@@ -42,7 +43,7 @@ class PayrollController extends Controller
      * POST /api/payrolls
      * إنشاء كشف مرتبات لموظف أو قسم
      */
-    public function store(Request $request): JsonResponse
+    public function store(StorePayrollRequest $request): JsonResponse
     {
         $request->validate([
             'month' => 'required|integer|min:1|max:12',

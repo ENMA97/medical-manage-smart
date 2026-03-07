@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Contract\StoreContractRequest;
 use App\Models\Contract;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -45,7 +46,7 @@ class ContractController extends Controller
      * POST /api/contracts
      * إنشاء عقد جديد
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreContractRequest $request): JsonResponse
     {
         $request->validate([
             'employee_id' => 'required|exists:employees,id',

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Resignation\StoreResignationRequest;
 use App\Models\Resignation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -43,7 +44,7 @@ class ResignationController extends Controller
      * POST /api/resignations
      * تقديم استقالة
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreResignationRequest $request): JsonResponse
     {
         $request->validate([
             'employee_id' => 'required|exists:employees,id',

@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import ImportEmployees from './pages/ImportEmployees';
 import Employees from './pages/Employees';
 import EmployeeDetails from './pages/EmployeeDetails';
+import EmployeeForm from './pages/EmployeeForm';
 import Departments from './pages/Departments';
 import Contracts from './pages/Contracts';
 import LeaveRequests from './pages/LeaveRequests';
@@ -16,6 +17,7 @@ import Payroll from './pages/Payroll';
 import Custody from './pages/Custody';
 import Resignations from './pages/Resignations';
 import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
@@ -35,7 +37,9 @@ export default function App() {
           >
             <Route path="/" element={<Dashboard />} />
             <Route path="/employees" element={<Employees />} />
+            <Route path="/employees/new" element={<EmployeeForm />} />
             <Route path="/employees/:id" element={<EmployeeDetails />} />
+            <Route path="/employees/:id/edit" element={<EmployeeForm />} />
             <Route path="/departments" element={<Departments />} />
             <Route path="/contracts" element={<Contracts />} />
             <Route path="/leave-requests" element={<LeaveRequests />} />
@@ -47,7 +51,7 @@ export default function App() {
           </Route>
 
           {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
 
         <InstallPrompt />

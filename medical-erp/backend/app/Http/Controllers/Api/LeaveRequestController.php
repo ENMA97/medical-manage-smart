@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Leave\StoreLeaveRequest;
 use App\Models\LeaveApproval;
 use App\Models\LeaveRequest;
 use Illuminate\Http\JsonResponse;
@@ -48,7 +49,7 @@ class LeaveRequestController extends Controller
      * POST /api/leave-requests
      * إنشاء طلب إجازة جديد
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreLeaveRequest $request): JsonResponse
     {
         $request->validate([
             'employee_id' => 'required|exists:employees,id',

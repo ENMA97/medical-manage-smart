@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'locale' => \App\Http\Middleware\SetLocale::class,
             'active' => \App\Http\Middleware\EnsureAccountActive::class,
+            'role' => \App\Http\Middleware\CheckRole::class,
         ]);
 
         $middleware->api(prepend: [

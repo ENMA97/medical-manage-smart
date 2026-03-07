@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Custody\StoreCustodyRequest;
 use App\Models\CustodyItem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -42,7 +43,7 @@ class CustodyController extends Controller
      * POST /api/custody
      * تسليم عهدة لموظف
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreCustodyRequest $request): JsonResponse
     {
         $request->validate([
             'employee_id' => 'required|exists:employees,id',

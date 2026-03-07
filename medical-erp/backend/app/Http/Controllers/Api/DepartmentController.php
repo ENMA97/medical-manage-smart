@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Department\StoreDepartmentRequest;
+use App\Http\Requests\Department\UpdateDepartmentRequest;
 use App\Models\Department;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,7 +43,7 @@ class DepartmentController extends Controller
      * POST /api/departments
      * إنشاء قسم جديد
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreDepartmentRequest $request): JsonResponse
     {
         $request->validate([
             'code' => 'required|string|unique:departments,code',
@@ -97,7 +99,7 @@ class DepartmentController extends Controller
      * PUT /api/departments/{id}
      * تحديث قسم
      */
-    public function update(Request $request, string $id): JsonResponse
+    public function update(UpdateDepartmentRequest $request, string $id): JsonResponse
     {
         $department = Department::findOrFail($id);
 

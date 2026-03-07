@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Employee\StoreEmployeeRequest;
+use App\Http\Requests\Employee\UpdateEmployeeRequest;
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -46,7 +48,7 @@ class EmployeeController extends Controller
      * POST /api/employees
      * إنشاء موظف جديد مع حساب مستخدم
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreEmployeeRequest $request): JsonResponse
     {
         $request->validate([
             'employee_number' => 'required|string|unique:employees,employee_number',
@@ -148,7 +150,7 @@ class EmployeeController extends Controller
      * PUT /api/employees/{id}
      * تحديث بيانات موظف
      */
-    public function update(Request $request, string $id): JsonResponse
+    public function update(UpdateEmployeeRequest $request, string $id): JsonResponse
     {
         $employee = Employee::findOrFail($id);
 
