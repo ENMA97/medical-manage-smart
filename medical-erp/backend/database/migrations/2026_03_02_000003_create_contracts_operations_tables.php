@@ -268,7 +268,6 @@ return new class extends Migration
             $table->index(['employee_id', 'letter_type']);
             $table->index('status');
         });
-    }
 
         // ─────────────────────────────────────────────
         // 6. إدارة العهد (Custody Management)
