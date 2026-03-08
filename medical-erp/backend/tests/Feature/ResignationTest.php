@@ -43,7 +43,8 @@ class ResignationTest extends TestCase
     public function test_employee_can_submit_resignation(): void
     {
         $response = $this->actingAs($this->regularUser)->postJson('/api/resignations', [
-            'resignation_date' => now()->addDays(30)->format('Y-m-d'),
+            'employee_id' => $this->employee->id,
+            'request_date' => now()->addDays(30)->format('Y-m-d'),
             'last_working_day' => now()->addDays(60)->format('Y-m-d'),
             'reason' => 'فرصة عمل أفضل',
         ]);
@@ -57,8 +58,8 @@ class ResignationTest extends TestCase
         $resignation = Resignation::create([
             'id' => Str::uuid(),
             'employee_id' => $this->employee->id,
-            'resignation_number' => 'RSG-TEST-001',
-            'resignation_date' => now()->addDays(30),
+            'type' => 'resignation',
+            'request_date' => now()->addDays(30),
             'last_working_day' => now()->addDays(60),
             'reason' => 'فرصة عمل أفضل',
             'status' => 'pending',
@@ -75,15 +76,15 @@ class ResignationTest extends TestCase
         $resignation = Resignation::create([
             'id' => Str::uuid(),
             'employee_id' => $this->employee->id,
-            'resignation_number' => 'RSG-TEST-002',
-            'resignation_date' => now()->addDays(30),
+            'type' => 'resignation',
+            'request_date' => now()->addDays(30),
             'last_working_day' => now()->addDays(60),
             'reason' => 'أسباب شخصية',
             'status' => 'pending',
         ]);
 
         $response = $this->actingAs($this->admin)->postJson("/api/resignations/{$resignation->id}/reject", [
-            'reason' => 'نحتاجك في الفريق',
+            'remarks' => 'نحتاجك في الفريق',
         ]);
 
         $response->assertOk()
@@ -93,7 +94,7 @@ class ResignationTest extends TestCase
     public function test_unauthenticated_cannot_submit_resignation(): void
     {
         $response = $this->postJson('/api/resignations', [
-            'resignation_date' => now()->addDays(30)->format('Y-m-d'),
+            'request_date' => now()->addDays(30)->format('Y-m-d'),
             'reason' => 'test',
         ]);
 

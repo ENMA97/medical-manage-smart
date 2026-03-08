@@ -6,10 +6,12 @@ use App\Models\Contract;
 use App\Models\CustodyItem;
 use App\Models\Employee;
 use App\Models\EmployeeLoan;
+use App\Models\GeneratedLetter;
 use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use App\Models\LetterTemplate;
+use App\Models\LoanInstallment;
 use App\Models\Notification;
 use App\Models\Payroll;
 use App\Models\PayrollItem;
@@ -61,7 +63,19 @@ class DemoDataSeeder extends Seeder
         $this->command->info('⚙️  إنشاء إعدادات النظام...');
         $this->seedSettings();
 
-        // ─── 8. الإشعارات ───
+        // ─── 8. القروض ───
+        $this->command->info('💰 إنشاء بيانات القروض...');
+        $this->seedLoans($employees);
+
+        // ─── 9. الرواتب ───
+        $this->command->info('💵 إنشاء بيانات الرواتب...');
+        $this->seedPayroll($employees);
+
+        // ─── 10. الخطابات المُولّدة ───
+        $this->command->info('📬 إنشاء خطابات تجريبية...');
+        $this->seedGeneratedLetters($employees);
+
+        // ─── 11. الإشعارات ───
         $this->command->info('🔔 إنشاء إشعارات تجريبية...');
         $this->seedNotifications();
 
@@ -133,15 +147,17 @@ class DemoDataSeeder extends Seeder
         $year = date('Y');
         foreach ($employees as $employee) {
             foreach ($leaveTypes as $type) {
+                $used = rand(0, min(5, $type->default_days_per_year));
                 LeaveBalance::firstOrCreate(
                     ['employee_id' => $employee->id, 'leave_type_id' => $type->id, 'year' => $year],
                     [
                         'id' => Str::uuid(),
-                        'total_days' => $type->default_days_per_year,
-                        'used_days' => rand(0, min(5, $type->default_days_per_year)),
-                        'pending_days' => 0,
-                        'remaining_days' => $type->default_days_per_year - rand(0, min(5, $type->default_days_per_year)),
-                        'carried_forward_days' => 0,
+                        'total_entitled' => $type->default_days_per_year,
+                        'carried_forward' => 0,
+                        'additional_granted' => 0,
+                        'used' => $used,
+                        'pending' => 0,
+                        'remaining' => $type->default_days_per_year - $used,
                     ]
                 );
             }
@@ -174,27 +190,33 @@ class DemoDataSeeder extends Seeder
     {
         $templates = [
             [
+                'code' => 'SAL-CERT',
                 'name' => 'Salary Certificate',
                 'name_ar' => 'شهادة راتب',
                 'letter_type' => 'salary_certificate',
                 'body_template' => "To Whom It May Concern,\n\nThis is to certify that {employee_name} (Employee #{employee_number}) is employed at our organization in the {department} department as {position} since {hire_date}.\n\nDate: {date}",
                 'body_template_ar' => "إلى من يهمه الأمر،\n\nنشهد بأن السيد/ة {employee_name} يعمل لدى مؤسستنا في قسم {department} بمسمى {position} وذلك اعتباراً من {hire_date}.\n\nالتاريخ: {date}",
+                'available_variables' => ['employee_name', 'employee_number', 'department', 'position', 'hire_date', 'date'],
                 'requires_approval' => true,
             ],
             [
+                'code' => 'EMP-CERT',
                 'name' => 'Employment Certificate',
                 'name_ar' => 'شهادة عمل',
                 'letter_type' => 'employment_certificate',
                 'body_template' => "To Whom It May Concern,\n\nWe confirm that {employee_name} is currently employed in our organization.\n\nDate: {date}",
                 'body_template_ar' => "إلى من يهمه الأمر،\n\nنؤكد بأن {employee_name} يعمل حالياً لدى مؤسستنا.\n\nالتاريخ: {date}",
+                'available_variables' => ['employee_name', 'date'],
                 'requires_approval' => false,
             ],
             [
+                'code' => 'EXP-CERT',
                 'name' => 'Experience Certificate',
                 'name_ar' => 'شهادة خبرة',
                 'letter_type' => 'experience_certificate',
                 'body_template' => "To Whom It May Concern,\n\nThis certifies that {employee_name} has worked at our organization from {hire_date} as {position}.\n\nDate: {date}",
                 'body_template_ar' => "إلى من يهمه الأمر،\n\nنشهد بأن {employee_name} عمل لدى مؤسستنا بداية من {hire_date} بمسمى {position}.\n\nالتاريخ: {date}",
+                'available_variables' => ['employee_name', 'hire_date', 'position', 'date'],
                 'requires_approval' => true,
             ],
         ];
@@ -227,8 +249,9 @@ class DemoDataSeeder extends Seeder
                     array_merge($items[$i], [
                         'id' => Str::uuid(),
                         'employee_id' => $employee->id,
-                        'status' => 'active',
-                        'assigned_date' => $employee->hire_date ?? '2024-01-01',
+                        'status' => 'delivered',
+                        'condition_on_delivery' => 'new',
+                        'delivery_date' => $employee->hire_date ?? '2024-01-01',
                         'notes' => 'تم التسليم بحالة جيدة',
                     ])
                 );
@@ -259,13 +282,186 @@ class DemoDataSeeder extends Seeder
         }
     }
 
+    private function seedLoans($employees): void
+    {
+        $admin = User::where('user_type', 'super_admin')->first();
+
+        foreach ($employees->take(2) as $i => $employee) {
+            $loanAmount = ($i + 1) * 10000;
+            $monthlyDeduction = 1000;
+            $totalInstallments = (int) ceil($loanAmount / $monthlyDeduction);
+
+            $loan = EmployeeLoan::firstOrCreate(
+                ['employee_id' => $employee->id, 'status' => 'approved'],
+                [
+                    'id' => Str::uuid(),
+                    'loan_number' => 'LOAN-' . date('Y') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
+                    'loan_amount' => $loanAmount,
+                    'monthly_deduction' => $monthlyDeduction,
+                    'remaining_amount' => $loanAmount,
+                    'total_installments' => $totalInstallments,
+                    'paid_installments' => 0,
+                    'remaining_installments' => $totalInstallments,
+                    'start_date' => now()->startOfMonth()->format('Y-m-d'),
+                    'reason' => 'سلفة شخصية',
+                    'status' => 'approved',
+                    'approved_by' => $admin?->id,
+                    'approved_at' => now(),
+                ]
+            );
+
+            // Create installments
+            $remaining = $loanAmount;
+            for ($n = 1; $n <= $totalInstallments; $n++) {
+                $amount = $n === $totalInstallments
+                    ? $remaining
+                    : $monthlyDeduction;
+                $remaining -= $amount;
+
+                LoanInstallment::firstOrCreate(
+                    ['loan_id' => $loan->id, 'installment_number' => $n],
+                    [
+                        'id' => Str::uuid(),
+                        'amount' => $amount,
+                        'remaining_after' => max(0, $remaining),
+                        'due_date' => now()->startOfMonth()->addMonths($n)->format('Y-m-d'),
+                        'status' => 'pending',
+                    ]
+                );
+            }
+        }
+    }
+
+    private function seedPayroll($employees): void
+    {
+        $admin = User::where('user_type', 'super_admin')->first();
+        $contracts = Contract::where('status', 'active')->get()->keyBy('employee_id');
+
+        $payroll = Payroll::firstOrCreate(
+            ['month' => now()->subMonth()->month, 'year' => now()->subMonth()->year],
+            [
+                'id' => Str::uuid(),
+                'payroll_number' => 'PAY-' . now()->subMonth()->format('Y-m') . '-0001',
+                'month' => now()->subMonth()->month,
+                'year' => now()->subMonth()->year,
+                'status' => 'approved',
+                'employees_count' => $employees->count(),
+                'total_basic_salary' => 0,
+                'total_allowances' => 0,
+                'total_additions' => 0,
+                'total_deductions' => 0,
+                'total_overtime' => 0,
+                'total_gosi_employee' => 0,
+                'total_gosi_employer' => 0,
+                'total_gross_salary' => 0,
+                'total_net_salary' => 0,
+                'created_by' => $admin?->id,
+                'approved_by' => $admin?->id,
+                'approved_at' => now(),
+            ]
+        );
+
+        $totalBasic = 0;
+        $totalAllowances = 0;
+        $totalGosiEmp = 0;
+        $totalGosiEr = 0;
+        $totalGross = 0;
+        $totalNet = 0;
+
+        foreach ($employees as $employee) {
+            $contract = $contracts->get($employee->id);
+            if (!$contract) continue;
+
+            $basic = $contract->basic_salary;
+            $allowances = $contract->housing_allowance + $contract->transport_allowance +
+                          $contract->food_allowance + $contract->phone_allowance + $contract->other_allowances;
+            $gosiEmp = round($basic * 0.0975, 2);
+            $gosiEr = round($basic * 0.1175, 2);
+            $gross = $basic + $allowances;
+            $net = $gross - $gosiEmp;
+
+            PayrollItem::firstOrCreate(
+                ['payroll_id' => $payroll->id, 'employee_id' => $employee->id],
+                [
+                    'id' => Str::uuid(),
+                    'contract_id' => $contract->id,
+                    'basic_salary' => $basic,
+                    'housing_allowance' => $contract->housing_allowance,
+                    'transport_allowance' => $contract->transport_allowance,
+                    'food_allowance' => $contract->food_allowance,
+                    'phone_allowance' => $contract->phone_allowance,
+                    'other_allowances' => $contract->other_allowances,
+                    'gosi_employee' => $gosiEmp,
+                    'gosi_employer' => $gosiEr,
+                    'gross_salary' => $gross,
+                    'total_deductions' => $gosiEmp,
+                    'net_salary' => $net,
+                ]
+            );
+
+            $totalBasic += $basic;
+            $totalAllowances += $allowances;
+            $totalGosiEmp += $gosiEmp;
+            $totalGosiEr += $gosiEr;
+            $totalGross += $gross;
+            $totalNet += $net;
+        }
+
+        $payroll->update([
+            'total_basic_salary' => $totalBasic,
+            'total_allowances' => $totalAllowances,
+            'total_gosi_employee' => $totalGosiEmp,
+            'total_gosi_employer' => $totalGosiEr,
+            'total_gross_salary' => $totalGross,
+            'total_net_salary' => $totalNet,
+            'employees_count' => $employees->count(),
+        ]);
+    }
+
+    private function seedGeneratedLetters($employees): void
+    {
+        $admin = User::where('user_type', 'super_admin')->first();
+        $template = LetterTemplate::where('letter_type', 'salary_certificate')->first();
+
+        if (!$template) return;
+
+        foreach ($employees->take(2) as $i => $employee) {
+            GeneratedLetter::firstOrCreate(
+                ['employee_id' => $employee->id, 'template_id' => $template->id],
+                [
+                    'id' => Str::uuid(),
+                    'letter_number' => 'LTR-' . date('Y') . '-' . str_pad($i + 1, 5, '0', STR_PAD_LEFT),
+                    'letter_type' => $template->letter_type,
+                    'content' => str_replace(
+                        ['{employee_name}', '{employee_number}', '{department}', '{position}', '{hire_date}', '{date}'],
+                        [$employee->first_name . ' ' . $employee->last_name, $employee->employee_number, $employee->department?->name ?? 'N/A', 'Employee', $employee->hire_date, now()->format('Y-m-d')],
+                        $template->body_template
+                    ),
+                    'content_ar' => str_replace(
+                        ['{employee_name}', '{employee_number}', '{department}', '{position}', '{hire_date}', '{date}'],
+                        [$employee->first_name_ar . ' ' . $employee->last_name_ar, $employee->employee_number, $employee->department?->name_ar ?? 'غير محدد', 'موظف', $employee->hire_date, now()->format('Y-m-d')],
+                        $template->body_template_ar
+                    ),
+                    'variables_used' => [
+                        'employee_name' => $employee->first_name . ' ' . $employee->last_name,
+                        'employee_number' => $employee->employee_number,
+                    ],
+                    'status' => $i === 0 ? 'approved' : 'pending',
+                    'generated_by' => $admin?->id,
+                    'approved_by' => $i === 0 ? $admin?->id : null,
+                    'approved_at' => $i === 0 ? now() : null,
+                ]
+            );
+        }
+    }
+
     private function seedNotifications(): void
     {
         $users = User::all();
         $messages = [
-            ['title' => 'مرحباً بك في النظام', 'message' => 'تم تفعيل حسابك بنجاح. يمكنك الآن الوصول لجميع الخدمات.', 'type' => 'system'],
-            ['title' => 'تذكير: تجديد العقود', 'message' => 'يوجد عقود تنتهي خلال 30 يوماً. يرجى مراجعتها.', 'type' => 'contract'],
-            ['title' => 'طلب إجازة جديد', 'message' => 'تم تقديم طلب إجازة جديد بانتظار الموافقة.', 'type' => 'leave'],
+            ['title' => 'مرحباً بك في النظام', 'title_ar' => 'مرحباً بك في النظام', 'body' => 'Your account has been activated successfully.', 'body_ar' => 'تم تفعيل حسابك بنجاح. يمكنك الآن الوصول لجميع الخدمات.', 'type' => 'system', 'channel' => 'in_app'],
+            ['title' => 'Contract Renewal Reminder', 'title_ar' => 'تذكير: تجديد العقود', 'body' => 'Some contracts expire within 30 days. Please review them.', 'body_ar' => 'يوجد عقود تنتهي خلال 30 يوماً. يرجى مراجعتها.', 'type' => 'contract', 'channel' => 'in_app'],
+            ['title' => 'New Leave Request', 'title_ar' => 'طلب إجازة جديد', 'body' => 'A new leave request has been submitted and awaits approval.', 'body_ar' => 'تم تقديم طلب إجازة جديد بانتظار الموافقة.', 'type' => 'leave', 'channel' => 'in_app'],
         ];
 
         foreach ($users as $user) {
@@ -275,6 +471,8 @@ class DemoDataSeeder extends Seeder
                     array_merge($msg, [
                         'id' => Str::uuid(),
                         'user_id' => $user->id,
+                        'is_sent' => true,
+                        'sent_at' => now(),
                         'read_at' => $i === 0 ? now() : null,
                     ])
                 );
