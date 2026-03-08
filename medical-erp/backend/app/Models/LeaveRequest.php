@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class LeaveRequest extends Model
 {
-    use HasFactory, HasUuid, SoftDeletes;
+    use Auditable, HasFactory, HasUuid, SoftDeletes;
 
     protected $keyType = 'string';
     public $incrementing = false;

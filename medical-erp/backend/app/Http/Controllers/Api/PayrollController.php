@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exports\PayrollExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Payroll\StorePayrollRequest;
 use App\Models\Contract;
@@ -11,6 +12,8 @@ use App\Models\PayrollItem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PayrollController extends Controller
 {
@@ -248,21 +251,14 @@ class PayrollController extends Controller
 
     /**
      * GET /api/payrolls/{id}/export
-     * تصدير كشف مرتبات (placeholder)
+     * تصدير كشف مرتبات كملف Excel
      */
-    public function export(string $id): JsonResponse
+    public function export(string $id): BinaryFileResponse|JsonResponse
     {
         $payroll = Payroll::with(['items.employee'])->findOrFail($id);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'تم تجهيز ملف التصدير بنجاح',
-            'data' => [
-                'payroll_id' => $payroll->id,
-                'payroll_number' => $payroll->payroll_number,
-                'download_url' => null, // سيتم إضافة رابط التحميل لاحقاً
-                'note' => 'خاصية التصدير قيد التطوير',
-            ],
-        ]);
+        $filename = "payroll-{$payroll->payroll_number}.xlsx";
+
+        return Excel::download(new PayrollExport($payroll), $filename);
     }
 }
