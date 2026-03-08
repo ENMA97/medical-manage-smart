@@ -50,37 +50,6 @@ class EmployeeController extends Controller
      */
     public function store(StoreEmployeeRequest $request): JsonResponse
     {
-        $request->validate([
-            'employee_number' => 'required|string|unique:employees,employee_number',
-            'first_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
-            'first_name_ar' => 'nullable|string|max:100',
-            'last_name_ar' => 'nullable|string|max:100',
-            'second_name' => 'nullable|string|max:100',
-            'third_name' => 'nullable|string|max:100',
-            'second_name_ar' => 'nullable|string|max:100',
-            'third_name_ar' => 'nullable|string|max:100',
-            'email' => 'nullable|email|unique:employees,email',
-            'phone' => 'nullable|string|max:20',
-            'national_id' => 'nullable|string|max:20',
-            'department_id' => 'nullable|exists:departments,id',
-            'position_id' => 'nullable|exists:positions,id',
-            'direct_manager_id' => 'nullable|exists:employees,id',
-            'hire_date' => 'nullable|date',
-            'employment_type' => 'nullable|string',
-            'status' => 'nullable|string',
-            'gender' => 'nullable|string',
-            'date_of_birth' => 'nullable|date',
-            'marital_status' => 'nullable|string',
-            'nationality' => 'nullable|string',
-            'nationality_ar' => 'nullable|string',
-            'bank_name' => 'nullable|string',
-            'bank_account_number' => 'nullable|string',
-            'iban' => 'nullable|string',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string',
-        ]);
-
         try {
             $employee = DB::transaction(function () use ($request) {
                 $employee = Employee::create($request->only([
@@ -153,18 +122,6 @@ class EmployeeController extends Controller
     public function update(UpdateEmployeeRequest $request, string $id): JsonResponse
     {
         $employee = Employee::findOrFail($id);
-
-        $request->validate([
-            'employee_number' => 'sometimes|string|unique:employees,employee_number,' . $id,
-            'first_name' => 'sometimes|string|max:100',
-            'last_name' => 'sometimes|string|max:100',
-            'email' => 'sometimes|nullable|email|unique:employees,email,' . $id,
-            'department_id' => 'nullable|exists:departments,id',
-            'position_id' => 'nullable|exists:positions,id',
-            'direct_manager_id' => 'nullable|exists:employees,id',
-            'hire_date' => 'nullable|date',
-            'date_of_birth' => 'nullable|date',
-        ]);
 
         try {
             $employee->update($request->only([

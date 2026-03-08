@@ -16,13 +16,14 @@ class UpdateDepartmentRequest extends FormRequest
         $departmentId = $this->route('department');
 
         return [
+            'code' => "sometimes|string|max:20|unique:departments,code,{$departmentId}",
+            'name' => 'sometimes|string|max:255',
             'name_ar' => 'sometimes|string|max:255',
-            'name_en' => 'nullable|string|max:255',
-            'code' => "nullable|string|max:20|unique:departments,code,{$departmentId}",
-            'manager_id' => 'nullable|uuid|exists:employees,id',
-            'parent_id' => "nullable|uuid|exists:departments,id|not_in:{$departmentId}",
+            'parent_id' => "nullable|exists:departments,id|not_in:{$departmentId}",
+            'manager_id' => 'nullable|exists:employees,id',
             'description' => 'nullable|string|max:500',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|boolean',
+            'sort_order' => 'nullable|integer',
         ];
     }
 }

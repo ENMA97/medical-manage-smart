@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\LeaveRequestController;
 use App\Http\Controllers\Api\LeaveTypeController;
+use App\Http\Controllers\Api\LetterController;
+use App\Http\Controllers\Api\LoanController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PayrollController;
 use App\Http\Controllers\Api\ResignationController;
@@ -109,6 +111,16 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         // ── Resignations Approval ──
         Route::post('resignations/{resignation}/approve', [ResignationController::class, 'approve']);
         Route::post('resignations/{resignation}/reject', [ResignationController::class, 'reject']);
+
+        // ── Loans (السلف) ──
+        Route::apiResource('loans', LoanController::class)->only(['index', 'store', 'show']);
+        Route::post('loans/{loan}/approve', [LoanController::class, 'approve']);
+        Route::post('loans/{loan}/reject', [LoanController::class, 'reject']);
+
+        // ── Letters (الخطابات) ──
+        Route::get('letter-templates', [LetterController::class, 'templates']);
+        Route::apiResource('letters', LetterController::class)->only(['index', 'store', 'show']);
+        Route::post('letters/{letter}/approve', [LetterController::class, 'approve']);
 
         // ── System Settings ──
         Route::prefix('settings')->group(function () {

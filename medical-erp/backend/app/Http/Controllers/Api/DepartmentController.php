@@ -45,17 +45,6 @@ class DepartmentController extends Controller
      */
     public function store(StoreDepartmentRequest $request): JsonResponse
     {
-        $request->validate([
-            'code' => 'required|string|unique:departments,code',
-            'name' => 'required|string|max:255',
-            'name_ar' => 'required|string|max:255',
-            'parent_id' => 'nullable|exists:departments,id',
-            'manager_id' => 'nullable|exists:employees,id',
-            'description' => 'nullable|string',
-            'is_active' => 'nullable|boolean',
-            'sort_order' => 'nullable|integer',
-        ]);
-
         try {
             $department = Department::create($request->only([
                 'code', 'name', 'name_ar', 'parent_id', 'manager_id',
@@ -102,17 +91,6 @@ class DepartmentController extends Controller
     public function update(UpdateDepartmentRequest $request, string $id): JsonResponse
     {
         $department = Department::findOrFail($id);
-
-        $request->validate([
-            'code' => 'sometimes|string|unique:departments,code,' . $id,
-            'name' => 'sometimes|string|max:255',
-            'name_ar' => 'sometimes|string|max:255',
-            'parent_id' => 'nullable|exists:departments,id',
-            'manager_id' => 'nullable|exists:employees,id',
-            'description' => 'nullable|string',
-            'is_active' => 'nullable|boolean',
-            'sort_order' => 'nullable|integer',
-        ]);
 
         try {
             $department->update($request->only([

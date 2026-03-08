@@ -106,6 +106,41 @@ class Employee extends Model
         return $this->hasMany(Employee::class, 'direct_manager_id');
     }
 
+    public function contracts(): HasMany
+    {
+        return $this->hasMany(Contract::class);
+    }
+
+    public function leaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
+
+    public function leaveBalances(): HasMany
+    {
+        return $this->hasMany(LeaveBalance::class);
+    }
+
+    public function loans(): HasMany
+    {
+        return $this->hasMany(EmployeeLoan::class);
+    }
+
+    public function custodyItems(): HasMany
+    {
+        return $this->hasMany(CustodyItem::class);
+    }
+
+    public function resignations(): HasMany
+    {
+        return $this->hasMany(Resignation::class);
+    }
+
+    public function generatedLetters(): HasMany
+    {
+        return $this->hasMany(GeneratedLetter::class);
+    }
+
     // ─── Scopes ───
 
     public function scopeActive($query)

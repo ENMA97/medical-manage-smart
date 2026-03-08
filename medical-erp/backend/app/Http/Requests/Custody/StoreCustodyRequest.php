@@ -14,11 +14,18 @@ class StoreCustodyRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'employee_id' => 'required|uuid|exists:employees,id',
+            'employee_id' => 'required|exists:employees,id',
             'item_name' => 'required|string|max:255',
-            'item_type' => 'required|in:laptop,phone,car,key,badge,other',
+            'item_name_ar' => 'nullable|string|max:255',
+            'item_type' => 'nullable|string|max:100',
             'serial_number' => 'nullable|string|max:100',
-            'assigned_date' => 'required|date',
+            'asset_tag' => 'nullable|string|max:100',
+            'description' => 'nullable|string',
+            'value' => 'nullable|numeric|min:0',
+            'condition_on_delivery' => 'nullable|string',
+            'delivery_date' => 'required|date',
+            'expected_return_date' => 'nullable|date|after:delivery_date',
+            'delivered_by' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:1000',
         ];
     }
@@ -28,8 +35,7 @@ class StoreCustodyRequest extends FormRequest
         return [
             'employee_id.required' => 'الموظف مطلوب',
             'item_name.required' => 'اسم العهدة مطلوب',
-            'item_type.required' => 'نوع العهدة مطلوب',
-            'assigned_date.required' => 'تاريخ التسليم مطلوب',
+            'delivery_date.required' => 'تاريخ التسليم مطلوب',
         ];
     }
 }

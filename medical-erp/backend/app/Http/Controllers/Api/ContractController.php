@@ -48,27 +48,6 @@ class ContractController extends Controller
      */
     public function store(StoreContractRequest $request): JsonResponse
     {
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'contract_type' => 'required|in:full_time,part_time,temporary,tamheer,percentage,locum,probation',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'basic_salary' => 'required|numeric|min:0',
-            'housing_allowance' => 'nullable|numeric|min:0',
-            'transport_allowance' => 'nullable|numeric|min:0',
-            'food_allowance' => 'nullable|numeric|min:0',
-            'phone_allowance' => 'nullable|numeric|min:0',
-            'other_allowances' => 'nullable|numeric|min:0',
-            'duration_months' => 'nullable|integer|min:1',
-            'probation_days' => 'nullable|integer|min:0',
-            'annual_leave_days' => 'nullable|integer|min:0',
-            'sick_leave_days' => 'nullable|integer|min:0',
-            'notice_period_days' => 'nullable|integer|min:0',
-            'terms_and_conditions' => 'nullable|string',
-            'special_clauses' => 'nullable|string',
-            'previous_contract_id' => 'nullable|exists:contracts,id',
-        ]);
-
         try {
             $data = $request->only([
                 'employee_id', 'contract_type', 'start_date', 'end_date',

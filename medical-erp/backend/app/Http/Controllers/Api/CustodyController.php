@@ -45,22 +45,6 @@ class CustodyController extends Controller
      */
     public function store(StoreCustodyRequest $request): JsonResponse
     {
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'item_name' => 'required|string|max:255',
-            'item_name_ar' => 'nullable|string|max:255',
-            'item_type' => 'nullable|string|max:100',
-            'serial_number' => 'nullable|string|max:100',
-            'asset_tag' => 'nullable|string|max:100',
-            'description' => 'nullable|string',
-            'value' => 'nullable|numeric|min:0',
-            'condition_on_delivery' => 'nullable|string',
-            'delivery_date' => 'required|date',
-            'expected_return_date' => 'nullable|date|after:delivery_date',
-            'delivered_by' => 'nullable|string',
-            'notes' => 'nullable|string',
-        ]);
-
         try {
             $data = $request->only([
                 'employee_id', 'item_name', 'item_name_ar', 'item_type',

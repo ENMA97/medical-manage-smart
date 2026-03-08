@@ -46,20 +46,6 @@ class ResignationController extends Controller
      */
     public function store(StoreResignationRequest $request): JsonResponse
     {
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'contract_id' => 'nullable|exists:contracts,id',
-            'type' => 'nullable|string',
-            'request_date' => 'required|date',
-            'last_working_day' => 'required|date|after_or_equal:request_date',
-            'effective_date' => 'nullable|date|after_or_equal:last_working_day',
-            'notice_period_days' => 'nullable|integer|min:0',
-            'reason' => 'required|string',
-            'reason_ar' => 'nullable|string',
-            'direct_manager_id' => 'nullable|exists:employees,id',
-            'notes' => 'nullable|string',
-        ]);
-
         try {
             $data = $request->only([
                 'employee_id', 'contract_id', 'type',

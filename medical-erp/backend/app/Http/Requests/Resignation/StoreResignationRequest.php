@@ -14,8 +14,16 @@ class StoreResignationRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'employee_id' => 'required|exists:employees,id',
+            'contract_id' => 'nullable|exists:contracts,id',
+            'type' => 'nullable|string|max:50',
+            'request_date' => 'required|date',
+            'last_working_day' => 'required|date|after_or_equal:request_date',
+            'effective_date' => 'nullable|date|after_or_equal:last_working_day',
+            'notice_period_days' => 'nullable|integer|min:0',
             'reason' => 'required|string|max:1000',
-            'requested_last_day' => 'required|date|after:today',
+            'reason_ar' => 'nullable|string|max:1000',
+            'direct_manager_id' => 'nullable|exists:employees,id',
             'notes' => 'nullable|string|max:1000',
         ];
     }
@@ -23,9 +31,11 @@ class StoreResignationRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'employee_id.required' => 'الموظف مطلوب',
             'reason.required' => 'سبب الاستقالة مطلوب',
-            'requested_last_day.required' => 'تاريخ آخر يوم عمل مطلوب',
-            'requested_last_day.after' => 'تاريخ آخر يوم عمل يجب أن يكون في المستقبل',
+            'request_date.required' => 'تاريخ الطلب مطلوب',
+            'last_working_day.required' => 'تاريخ آخر يوم عمل مطلوب',
+            'last_working_day.after_or_equal' => 'تاريخ آخر يوم عمل يجب أن يكون بعد تاريخ الطلب',
         ];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Leave\StoreLeaveRequest;
 use App\Models\LeaveApproval;
+use App\Models\LeaveBalance;
 use App\Models\LeaveRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,20 +52,6 @@ class LeaveRequestController extends Controller
      */
     public function store(StoreLeaveRequest $request): JsonResponse
     {
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'leave_type_id' => 'required|exists:leave_types,id',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'total_days' => 'required|integer|min:1',
-            'reason' => 'nullable|string',
-            'reason_ar' => 'nullable|string',
-            'substitute_employee_id' => 'nullable|exists:employees,id',
-            'contact_during_leave' => 'nullable|string',
-            'address_during_leave' => 'nullable|string',
-            'leave_balance_id' => 'nullable|exists:leave_balances,id',
-        ]);
-
         try {
             $data = $request->only([
                 'employee_id', 'leave_type_id', 'leave_balance_id',
@@ -72,6 +59,19 @@ class LeaveRequestController extends Controller
                 'reason', 'reason_ar',
                 'substitute_employee_id', 'contact_during_leave', 'address_during_leave',
             ]);
+
+            // التحقق من رصيد الإجازات
+            $balance = LeaveBalance::where('employee_id', $data['employee_id'])
+                ->where('leave_type_id', $data['leave_type_id'])
+                ->where('year', date('Y'))
+                ->first();
+
+            if ($balance && $balance->remaining < $data['total_days']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'رصيد الإجازات غير كافٍ. المتبقي: ' . $balance->remaining . ' يوم',
+                ], 422);
+            }
 
             // توليد رقم الطلب
             $data['request_number'] = 'LR-' . date('Y') . '-' . str_pad(
@@ -84,6 +84,18 @@ class LeaveRequestController extends Controller
             $data['status'] = 'pending';
             $data['current_approval_step'] = 1;
             $data['total_approval_steps'] = 2;
+
+            if ($balance) {
+                $data['leave_balance_id'] = $balance->id;
+            }
+
+            DB::transaction(function () use ($data, $balance) {
+                // تحديث الرصيد المعلق
+                if ($balance) {
+                    $balance->increment('pending', $data['total_days']);
+                    $balance->decrement('remaining', $data['total_days']);
+                }
+            });
 
             $leaveRequest = LeaveRequest::create($data);
             $leaveRequest->load(['employee', 'leaveType']);
@@ -155,6 +167,13 @@ class LeaveRequestController extends Controller
                 // التحقق من اكتمال جميع خطوات الموافقة
                 if ($leaveRequest->current_approval_step >= $leaveRequest->total_approval_steps) {
                     $leaveRequest->update(['status' => 'approved']);
+
+                    // نقل من معلّق إلى مستخدم في رصيد الإجازات
+                    $balance = $leaveRequest->leaveBalance;
+                    if ($balance) {
+                        $balance->decrement('pending', $leaveRequest->total_days);
+                        $balance->increment('used', $leaveRequest->total_days);
+                    }
                 } else {
                     $leaveRequest->update([
                         'status' => 'partially_approved',
@@ -213,6 +232,13 @@ class LeaveRequestController extends Controller
                 ]);
 
                 $leaveRequest->update(['status' => 'rejected']);
+
+                // إعادة الرصيد المعلّق
+                $balance = $leaveRequest->leaveBalance;
+                if ($balance) {
+                    $balance->decrement('pending', $leaveRequest->total_days);
+                    $balance->increment('remaining', $leaveRequest->total_days);
+                }
             });
 
             $leaveRequest->load(['employee', 'leaveType', 'approvals']);
@@ -251,12 +277,27 @@ class LeaveRequestController extends Controller
         ]);
 
         try {
-            $leaveRequest->update([
-                'status' => 'cancelled',
-                'cancelled_by' => auth()->id(),
-                'cancelled_at' => now(),
-                'cancellation_reason' => $request->input('cancellation_reason'),
-            ]);
+            DB::transaction(function () use ($leaveRequest, $request) {
+                $wasApproved = $leaveRequest->status === 'approved';
+
+                $leaveRequest->update([
+                    'status' => 'cancelled',
+                    'cancelled_by' => auth()->id(),
+                    'cancelled_at' => now(),
+                    'cancellation_reason' => $request->input('cancellation_reason'),
+                ]);
+
+                // إعادة الرصيد عند الإلغاء
+                $balance = $leaveRequest->leaveBalance;
+                if ($balance) {
+                    if ($wasApproved) {
+                        $balance->decrement('used', $leaveRequest->total_days);
+                    } else {
+                        $balance->decrement('pending', $leaveRequest->total_days);
+                    }
+                    $balance->increment('remaining', $leaveRequest->total_days);
+                }
+            });
 
             $leaveRequest->load(['employee', 'leaveType']);
 
