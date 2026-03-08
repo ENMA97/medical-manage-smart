@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import loanService from '../services/loanService';
+import employeeService from '../services/employeeService';
+import Modal from '../components/ui/Modal';
 
 const statusLabels = { pending: 'معلّقة', approved: 'معتمدة', rejected: 'مرفوضة', paid: 'مسددة' };
 const statusColors = {
@@ -10,9 +12,15 @@ const statusColors = {
   paid: 'bg-blue-100 text-blue-700',
 };
 
+const emptyForm = { employee_id: '', loan_amount: '', monthly_deduction: '', start_date: '', reason: '' };
+
 export default function Loans() {
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [employees, setEmployees] = useState([]);
 
   const fetchLoans = useCallback(async () => {
     setLoading(true);
@@ -27,6 +35,41 @@ export default function Loans() {
   }, []);
 
   useEffect(() => { fetchLoans(); }, [fetchLoans]);
+
+  async function loadEmployees() {
+    if (employees.length > 0) return;
+    try {
+      const { data } = await employeeService.getAll({ per_page: 200 });
+      setEmployees(data.data?.data || data.data || []);
+    } catch { /* silent */ }
+  }
+
+  function openCreate() {
+    loadEmployees();
+    setForm(emptyForm);
+    setShowCreate(true);
+  }
+
+  async function handleCreate(e) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await loanService.create({
+        employee_id: form.employee_id,
+        loan_amount: Number(form.loan_amount),
+        monthly_deduction: Number(form.monthly_deduction),
+        start_date: form.start_date,
+        reason: form.reason || undefined,
+      });
+      toast.success('تم إنشاء السلفة بنجاح');
+      setShowCreate(false);
+      fetchLoans();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'حدث خطأ');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function handleApprove(id) {
     try {
@@ -48,9 +91,16 @@ export default function Loans() {
     }
   }
 
+  function set(key, value) { setForm((f) => ({ ...f, [key]: value })); }
+
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold text-gray-800">إدارة السلف</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold text-gray-800">إدارة السلف</h1>
+        <button onClick={openCreate} className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+          سلفة جديدة
+        </button>
+      </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
@@ -75,7 +125,7 @@ export default function Loans() {
                   <tr key={loan.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-mono text-gray-700">{loan.loan_number}</td>
                     <td className="px-4 py-3 font-medium text-gray-800">
-                      {loan.employee?.full_name_ar || loan.employee?.full_name_en || '—'}
+                      {loan.employee?.full_name_ar || loan.employee?.full_name_en || loan.employee?.full_name || '—'}
                     </td>
                     <td className="px-4 py-3 text-gray-600 hidden sm:table-cell">
                       {Number(loan.loan_amount).toLocaleString('ar-SA')} ر.س
@@ -103,6 +153,60 @@ export default function Loans() {
           </div>
         )}
       </div>
+
+      {/* Create Loan Modal */}
+      <Modal open={showCreate} onClose={() => setShowCreate(false)} title="إنشاء سلفة جديدة">
+        <form onSubmit={handleCreate} className="space-y-4">
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">الموظف</label>
+            <select
+              value={form.employee_id} onChange={(e) => set('employee_id', e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">اختر الموظف</option>
+              {employees.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.full_name || `${emp.first_name_ar || emp.first_name} ${emp.last_name_ar || emp.last_name}`} — {emp.employee_number}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">مبلغ السلفة</label>
+              <input type="number" min="100" value={form.loan_amount} onChange={(e) => set('loan_amount', e.target.value)}
+                required className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">القسط الشهري</label>
+              <input type="number" min="50" value={form.monthly_deduction} onChange={(e) => set('monthly_deduction', e.target.value)}
+                required className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">تاريخ البدء</label>
+            <input type="date" value={form.start_date} onChange={(e) => set('start_date', e.target.value)}
+              required className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">السبب (اختياري)</label>
+            <textarea value={form.reason} onChange={(e) => set('reason', e.target.value)} rows={2}
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" />
+          </div>
+          {form.loan_amount && form.monthly_deduction && Number(form.monthly_deduction) > 0 && (
+            <p className="text-xs text-gray-500">
+              عدد الأقساط المتوقع: {Math.ceil(Number(form.loan_amount) / Number(form.monthly_deduction))} قسط
+            </p>
+          )}
+          <div className="flex gap-2 justify-end pt-2">
+            <button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">إلغاء</button>
+            <button type="submit" disabled={saving} className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+              {saving ? 'جاري الحفظ...' : 'إنشاء السلفة'}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

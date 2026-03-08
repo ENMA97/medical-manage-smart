@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import notificationService from '../services/notificationService';
 import toast from 'react-hot-toast';
 
 const navItems = [
@@ -120,23 +121,54 @@ export default function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const { data } = await notificationService.getAll({ per_page: 10 });
+      const notifData = data.data;
+      setNotifications(notifData.notifications?.data || []);
+      setUnreadCount(notifData.unread_count || 0);
+    } catch { /* silent */ }
+  }, []);
+
+  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
+  useEffect(() => { const t = setInterval(fetchNotifications, 60000); return () => clearInterval(t); }, [fetchNotifications]);
+
+  async function handleMarkAllRead() {
+    try {
+      await notificationService.markAllAsRead();
+      setUnreadCount(0);
+      setNotifications((prev) => prev.map((n) => ({ ...n, read_at: new Date().toISOString() })));
+    } catch { /* silent */ }
+  }
+
+  async function handleMarkRead(id) {
+    try {
+      await notificationService.markAsRead(id);
+      setUnreadCount((c) => Math.max(0, c - 1));
+      setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read_at: new Date().toISOString() } : n));
+    } catch { /* silent */ }
+  }
 
   // Close menu when navigating
   useEffect(() => {
     setMenuOpen(false);
+    setNotifOpen(false);
   }, [location.pathname]);
 
-  // Close menu when clicking outside
+  // Close menus when clicking outside
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!menuOpen && !notifOpen) return;
     function handleClick(e) {
-      if (!e.target.closest('[data-user-menu]')) {
-        setMenuOpen(false);
-      }
+      if (menuOpen && !e.target.closest('[data-user-menu]')) setMenuOpen(false);
+      if (notifOpen && !e.target.closest('[data-notif-menu]')) setNotifOpen(false);
     }
     document.addEventListener('click', handleClick);
     return () => document.removeEventListener('click', handleClick);
-  }, [menuOpen]);
+  }, [menuOpen, notifOpen]);
 
   async function handleLogout() {
     try {
@@ -187,6 +219,53 @@ export default function MainLayout() {
               </div>
             </div>
 
+            <div className="flex items-center gap-2">
+            {/* Notifications bell */}
+            <div className="relative" data-notif-menu>
+              <button
+                onClick={() => { setNotifOpen(!notifOpen); setMenuOpen(false); }}
+                className="relative p-2 text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {notifOpen && (
+                <div className="absolute left-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50 animate-in fade-in slide-in-from-top-2">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                    <span className="text-sm font-semibold text-gray-800">الإشعارات</span>
+                    {unreadCount > 0 && (
+                      <button onClick={handleMarkAllRead} className="text-xs text-blue-600 hover:text-blue-800">
+                        تحديد الكل كمقروء
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-72 overflow-y-auto divide-y divide-gray-50">
+                    {notifications.length === 0 ? (
+                      <div className="text-center py-8 text-gray-400 text-sm">لا توجد إشعارات</div>
+                    ) : (
+                      notifications.map((n) => (
+                        <button
+                          key={n.id}
+                          onClick={() => !n.read_at && handleMarkRead(n.id)}
+                          className={`w-full text-right px-4 py-3 hover:bg-gray-50 transition-colors ${!n.read_at ? 'bg-blue-50/50' : ''}`}
+                        >
+                          <p className="text-sm text-gray-800 line-clamp-2">{n.title || n.message || 'إشعار جديد'}</p>
+                          <p className="text-xs text-gray-400 mt-1">{n.created_at ? new Date(n.created_at).toLocaleDateString('ar-SA') : ''}</p>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* User menu */}
             <div className="relative" data-user-menu>
               <button
@@ -222,6 +301,7 @@ export default function MainLayout() {
                   </button>
                 </div>
               )}
+            </div>
             </div>
           </div>
         </div>

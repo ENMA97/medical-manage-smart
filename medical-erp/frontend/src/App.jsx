@@ -14,6 +14,7 @@ import Departments from './pages/Departments';
 import Contracts from './pages/Contracts';
 import LeaveRequests from './pages/LeaveRequests';
 import Payroll from './pages/Payroll';
+import PayrollDetail from './pages/PayrollDetail';
 import Custody from './pages/Custody';
 import Loans from './pages/Loans';
 import Letters from './pages/Letters';
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="/contracts" element={<Contracts />} />
             <Route path="/leave-requests" element={<LeaveRequests />} />
             <Route path="/payroll" element={<Payroll />} />
+            <Route path="/payroll/:id" element={<PayrollDetail />} />
             <Route path="/custody" element={<Custody />} />
             <Route path="/loans" element={<Loans />} />
             <Route path="/letters" element={<Letters />} />
