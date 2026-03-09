@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Loan\StoreLoanRequest;
 use App\Models\EmployeeLoan;
 use App\Models\LoanInstallment;
 use Illuminate\Http\JsonResponse;
@@ -36,15 +37,8 @@ class LoanController extends Controller
      * POST /api/loans
      * إنشاء سلفة جديدة
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreLoanRequest $request): JsonResponse
     {
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'loan_amount' => 'required|numeric|min:100',
-            'monthly_deduction' => 'required|numeric|min:50',
-            'start_date' => 'required|date|after_or_equal:today',
-            'reason' => 'nullable|string|max:500',
-        ]);
 
         $loanAmount = $request->input('loan_amount');
         $monthlyDeduction = $request->input('monthly_deduction');

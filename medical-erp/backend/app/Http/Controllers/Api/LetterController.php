@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Letter\StoreLetterRequest;
 use App\Models\GeneratedLetter;
 use App\Models\LetterTemplate;
 use App\Models\Employee;
@@ -54,14 +55,8 @@ class LetterController extends Controller
      * POST /api/letters
      * إنشاء خطاب جديد من قالب
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreLetterRequest $request): JsonResponse
     {
-        $request->validate([
-            'template_id' => 'required|exists:letter_templates,id',
-            'employee_id' => 'required|exists:employees,id',
-            'variables' => 'nullable|array',
-            'notes' => 'nullable|string|max:500',
-        ]);
 
         $template = LetterTemplate::findOrFail($request->input('template_id'));
         $employee = Employee::with(['department', 'position'])->findOrFail($request->input('employee_id'));

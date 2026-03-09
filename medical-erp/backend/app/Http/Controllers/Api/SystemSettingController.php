@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Setting\UpdateSettingRequest;
 use App\Models\SystemSetting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,7 +42,7 @@ class SystemSettingController extends Controller
      * PUT /api/settings/{id}
      * تحديث إعداد
      */
-    public function update(Request $request, string $id): JsonResponse
+    public function update(UpdateSettingRequest $request, string $id): JsonResponse
     {
         $setting = SystemSetting::findOrFail($id);
 
@@ -51,10 +52,6 @@ class SystemSettingController extends Controller
                 'message' => 'لا يمكن تعديل هذا الإعداد',
             ], 403);
         }
-
-        $request->validate([
-            'value' => 'required|string',
-        ]);
 
         try {
             $setting->update([

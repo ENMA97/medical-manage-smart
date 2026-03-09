@@ -20,6 +20,8 @@ import Loans from './pages/Loans';
 import Letters from './pages/Letters';
 import Resignations from './pages/Resignations';
 import Disciplinary from './pages/Disciplinary';
+import Positions from './pages/Positions';
+import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 
@@ -45,6 +47,7 @@ export default function App() {
             <Route path="/employees/:id" element={<EmployeeDetails />} />
             <Route path="/employees/:id/edit" element={<EmployeeForm />} />
             <Route path="/departments" element={<Departments />} />
+            <Route path="/positions" element={<Positions />} />
             <Route path="/contracts" element={<Contracts />} />
             <Route path="/leave-requests" element={<LeaveRequests />} />
             <Route path="/payroll" element={<Payroll />} />
@@ -54,6 +57,7 @@ export default function App() {
             <Route path="/letters" element={<Letters />} />
             <Route path="/resignations" element={<Resignations />} />
             <Route path="/disciplinary" element={<Disciplinary />} />
+            <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/import" element={<ImportEmployees />} />
           </Route>

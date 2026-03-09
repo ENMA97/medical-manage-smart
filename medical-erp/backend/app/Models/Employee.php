@@ -141,6 +141,16 @@ class Employee extends Model
         return $this->hasMany(GeneratedLetter::class);
     }
 
+    public function violations(): HasMany
+    {
+        return $this->hasMany(Violation::class);
+    }
+
+    public function payrollItems(): HasMany
+    {
+        return $this->hasMany(PayrollItem::class);
+    }
+
     // ─── Scopes ───
 
     public function scopeActive($query)

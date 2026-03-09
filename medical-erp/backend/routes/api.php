@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PayrollController;
 use App\Http\Controllers\Api\ResignationController;
 use App\Http\Controllers\Api\DisciplinaryController;
+use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\SystemSettingController;
 use Illuminate\Support\Facades\Route;
 
@@ -88,6 +89,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 
         // ── Departments ──
         Route::apiResource('departments', DepartmentController::class);
+
+        // ── Positions (المسميات الوظيفية) ──
+        Route::apiResource('positions', PositionController::class);
 
         // ── Contracts ──
         Route::apiResource('contracts', ContractController::class)->except(['destroy']);
