@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\PayrollController;
 use App\Http\Controllers\Api\ResignationController;
 use App\Http\Controllers\Api\DisciplinaryController;
 use App\Http\Controllers\Api\PositionController;
+use App\Http\Controllers\Api\AiInsightsController;
 use App\Http\Controllers\Api\SystemSettingController;
 use Illuminate\Support\Facades\Route;
 
@@ -138,6 +139,19 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('decisions/{decision}', [DisciplinaryController::class, 'showDecision']);
         Route::post('violations/{violation}/decision', [DisciplinaryController::class, 'issueDecision']);
         Route::post('decisions/{decision}/approve', [DisciplinaryController::class, 'approveDecision']);
+
+        // ── AI Insights (الذكاء الاصطناعي) ──
+        Route::prefix('ai')->group(function () {
+            Route::get('/dashboard', [AiInsightsController::class, 'dashboard']);
+            Route::post('/analyze/leave-patterns', [AiInsightsController::class, 'analyzeLeavePatterns']);
+            Route::post('/analyze/turnover-risk', [AiInsightsController::class, 'analyzeTurnoverRisk']);
+            Route::get('/predictions', [AiInsightsController::class, 'predictions']);
+            Route::post('/predictions/{prediction}/acknowledge', [AiInsightsController::class, 'acknowledgePrediction']);
+            Route::get('/recommendations', [AiInsightsController::class, 'recommendations']);
+            Route::put('/recommendations/{recommendation}/review', [AiInsightsController::class, 'reviewRecommendation']);
+            Route::get('/risk-scores', [AiInsightsController::class, 'riskScores']);
+            Route::get('/analysis-logs', [AiInsightsController::class, 'analysisLogs']);
+        });
 
         // ── System Settings ──
         Route::prefix('settings')->group(function () {
