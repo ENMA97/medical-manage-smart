@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import InstallPrompt from './components/common/InstallPrompt';
 import MainLayout from './layouts/MainLayout';
 import Login from './pages/auth/Login';
@@ -28,6 +29,7 @@ import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
+    <ErrorBoundary>
     <BrowserRouter>
       <AuthProvider>
         <Routes>
@@ -81,5 +83,6 @@ export default function App() {
         />
       </AuthProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }
