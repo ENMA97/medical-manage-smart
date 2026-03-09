@@ -3,6 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Disciplinary\AddSessionRequest;
+use App\Http\Requests\Disciplinary\FormCommitteeRequest;
+use App\Http\Requests\Disciplinary\IssueDecisionRequest;
+use App\Http\Requests\Disciplinary\StoreViolationRequest;
 use App\Models\CommitteeMember;
 use App\Models\DisciplinaryDecision;
 use App\Models\InvestigationCommittee;
@@ -112,19 +116,8 @@ class DisciplinaryController extends Controller
     /**
      * POST /api/violations
      */
-    public function store(Request $request): JsonResponse
+    public function store(StoreViolationRequest $request): JsonResponse
     {
-        $request->validate([
-            'employee_id' => 'required|exists:employees,id',
-            'violation_type_id' => 'required|exists:violation_types,id',
-            'violation_date' => 'required|date',
-            'violation_time' => 'nullable|date_format:H:i',
-            'location' => 'nullable|string|max:255',
-            'description' => 'required|string|max:2000',
-            'description_ar' => 'nullable|string|max:2000',
-            'witnesses' => 'nullable|array',
-        ]);
-
         $type = ViolationType::findOrFail($request->input('violation_type_id'));
 
         // حساب رقم التكرار
@@ -190,7 +183,7 @@ class DisciplinaryController extends Controller
      * POST /api/violations/{violationId}/committee
      * تشكيل لجنة تحقيق
      */
-    public function formCommittee(Request $request, string $violationId): JsonResponse
+    public function formCommittee(FormCommitteeRequest $request, string $violationId): JsonResponse
     {
         $violation = Violation::findOrFail($violationId);
 
@@ -200,19 +193,6 @@ class DisciplinaryController extends Controller
                 'message' => 'تم تشكيل لجنة تحقيق مسبقاً لهذه المخالفة',
             ], 422);
         }
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'name_ar' => 'required|string|max:255',
-            'chairman_id' => 'required|exists:employees,id',
-            'deadline' => 'nullable|date|after:today',
-            'mandate' => 'nullable|string',
-            'mandate_ar' => 'nullable|string',
-            'members' => 'required|array|min:2',
-            'members.*.employee_id' => 'required|exists:employees,id',
-            'members.*.role' => 'required|in:chairman,member,secretary,observer',
-            'members.*.role_ar' => 'nullable|string',
-        ]);
 
         $committee = InvestigationCommittee::create([
             'committee_number' => 'COM-' . date('Y') . '-' . str_pad(InvestigationCommittee::count() + 1, 4, '0', STR_PAD_LEFT),
@@ -269,23 +249,9 @@ class DisciplinaryController extends Controller
      * POST /api/committees/{id}/sessions
      * إضافة جلسة تحقيق
      */
-    public function addSession(Request $request, string $committeeId): JsonResponse
+    public function addSession(AddSessionRequest $request, string $committeeId): JsonResponse
     {
         $committee = InvestigationCommittee::findOrFail($committeeId);
-
-        $request->validate([
-            'session_date' => 'required|date',
-            'location' => 'nullable|string|max:255',
-            'agenda' => 'nullable|string',
-            'agenda_ar' => 'nullable|string',
-            'minutes' => 'nullable|string',
-            'minutes_ar' => 'nullable|string',
-            'employee_response' => 'nullable|string',
-            'employee_response_ar' => 'nullable|string',
-            'employee_attended' => 'required|boolean',
-            'employee_absence_reason' => 'nullable|string',
-            'status' => 'required|in:scheduled,completed,postponed,cancelled',
-        ]);
 
         $sessionNumber = $committee->sessions()->count() + 1;
 
@@ -342,24 +308,9 @@ class DisciplinaryController extends Controller
      * POST /api/violations/{violationId}/decision
      * إصدار قرار تأديبي
      */
-    public function issueDecision(Request $request, string $violationId): JsonResponse
+    public function issueDecision(IssueDecisionRequest $request, string $violationId): JsonResponse
     {
         $violation = Violation::with('violationType')->findOrFail($violationId);
-
-        $request->validate([
-            'penalty_type' => 'required|string|max:100',
-            'penalty_type_ar' => 'required|string|max:100',
-            'penalty_details' => 'nullable|string',
-            'penalty_details_ar' => 'nullable|string',
-            'deduction_amount' => 'nullable|numeric|min:0',
-            'deduction_days' => 'nullable|integer|min:0',
-            'suspension_days' => 'nullable|integer|min:0',
-            'effective_date' => 'required|date',
-            'end_date' => 'nullable|date|after_or_equal:effective_date',
-            'justification' => 'required|string',
-            'justification_ar' => 'nullable|string',
-            'notes' => 'nullable|string',
-        ]);
 
         $suggestedPenalty = $violation->violationType->suggestPenalty($violation->occurrence_number);
 
