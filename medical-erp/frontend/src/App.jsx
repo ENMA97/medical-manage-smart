@@ -19,6 +19,7 @@ import Custody from './pages/Custody';
 import Loans from './pages/Loans';
 import Letters from './pages/Letters';
 import Resignations from './pages/Resignations';
+import Disciplinary from './pages/Disciplinary';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="/loans" element={<Loans />} />
             <Route path="/letters" element={<Letters />} />
             <Route path="/resignations" element={<Resignations />} />
+            <Route path="/disciplinary" element={<Disciplinary />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/import" element={<ImportEmployees />} />
           </Route>

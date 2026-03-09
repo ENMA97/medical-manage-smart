@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\LoanController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PayrollController;
 use App\Http\Controllers\Api\ResignationController;
+use App\Http\Controllers\Api\DisciplinaryController;
 use App\Http\Controllers\Api\SystemSettingController;
 use Illuminate\Support\Facades\Route;
 
@@ -121,6 +122,18 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::get('letter-templates', [LetterController::class, 'templates']);
         Route::apiResource('letters', LetterController::class)->only(['index', 'store', 'show']);
         Route::post('letters/{letter}/approve', [LetterController::class, 'approve']);
+
+        // ── Disciplinary & Investigations (المساءلات والتحقيق) ──
+        Route::get('violation-types', [DisciplinaryController::class, 'violationTypes']);
+        Route::get('violation-types/{id}/suggest-penalty', [DisciplinaryController::class, 'suggestPenalty']);
+        Route::apiResource('violations', DisciplinaryController::class)->only(['index', 'store', 'show']);
+        Route::post('violations/{violation}/committee', [DisciplinaryController::class, 'formCommittee']);
+        Route::get('committees/{committee}', [DisciplinaryController::class, 'showCommittee']);
+        Route::post('committees/{committee}/sessions', [DisciplinaryController::class, 'addSession']);
+        Route::get('decisions', [DisciplinaryController::class, 'decisions']);
+        Route::get('decisions/{decision}', [DisciplinaryController::class, 'showDecision']);
+        Route::post('violations/{violation}/decision', [DisciplinaryController::class, 'issueDecision']);
+        Route::post('decisions/{decision}/approve', [DisciplinaryController::class, 'approveDecision']);
 
         // ── System Settings ──
         Route::prefix('settings')->group(function () {
