@@ -182,16 +182,61 @@ class EmployeeController extends Controller
 
     /**
      * GET /api/employees/{id}/documents
-     * جلب مستندات الموظف (placeholder)
+     * جلب مستندات الموظف (الهوية، الجواز، العقود، التأمينات)
      */
     public function documents(string $id): JsonResponse
     {
-        $employee = Employee::findOrFail($id);
+        $employee = Employee::with(['contracts:id,employee_id,contract_number,contract_type,start_date,end_date,status'])
+            ->findOrFail($id);
+
+        $documents = [];
+
+        if ($employee->national_id) {
+            $documents[] = [
+                'type' => 'national_id',
+                'label' => 'الهوية الوطنية / الإقامة',
+                'number' => $employee->national_id,
+                'id_type' => $employee->id_type,
+                'expiry_date' => $employee->id_expiry_date?->format('Y-m-d'),
+                'status' => $employee->id_expiry_date && $employee->id_expiry_date->isPast() ? 'expired' : 'valid',
+            ];
+        }
+
+        if ($employee->passport_number) {
+            $documents[] = [
+                'type' => 'passport',
+                'label' => 'جواز السفر',
+                'number' => $employee->passport_number,
+                'expiry_date' => $employee->passport_expiry_date?->format('Y-m-d'),
+                'status' => $employee->passport_expiry_date && $employee->passport_expiry_date->isPast() ? 'expired' : 'valid',
+            ];
+        }
+
+        foreach ($employee->contracts as $contract) {
+            $documents[] = [
+                'type' => 'contract',
+                'label' => "عقد عمل - {$contract->contract_number}",
+                'contract_id' => $contract->id,
+                'contract_type' => $contract->contract_type,
+                'start_date' => $contract->start_date?->format('Y-m-d'),
+                'end_date' => $contract->end_date?->format('Y-m-d'),
+                'status' => $contract->status,
+            ];
+        }
+
+        if ($employee->gosi_number) {
+            $documents[] = [
+                'type' => 'gosi',
+                'label' => 'التأمينات الاجتماعية (GOSI)',
+                'number' => $employee->gosi_number,
+                'status' => 'valid',
+            ];
+        }
 
         return response()->json([
             'success' => true,
             'message' => 'تم جلب مستندات الموظف بنجاح',
-            'data' => [],
+            'data' => $documents,
         ]);
     }
 }

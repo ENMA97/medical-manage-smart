@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\HijriDate;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Letter\StoreLetterRequest;
 use App\Models\GeneratedLetter;
@@ -70,7 +71,7 @@ class LetterController extends Controller
             'hire_date' => $employee->hire_date?->format('Y-m-d'),
             'national_id' => $employee->national_id,
             'date' => now()->format('Y-m-d'),
-            'hijri_date' => now()->format('Y-m-d'), // placeholder
+            'hijri_date' => HijriDate::fromGregorian(now()),
         ], $request->input('variables', []));
 
         // استبدال المتغيرات في القالب

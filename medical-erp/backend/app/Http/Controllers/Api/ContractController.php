@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Contract\StoreContractRequest;
+use App\Http\Requests\Contract\UpdateContractRequest;
 use App\Models\Contract;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -115,22 +116,9 @@ class ContractController extends Controller
      * PUT /api/contracts/{id}
      * تحديث عقد
      */
-    public function update(Request $request, string $id): JsonResponse
+    public function update(UpdateContractRequest $request, string $id): JsonResponse
     {
         $contract = Contract::findOrFail($id);
-
-        $request->validate([
-            'contract_type' => 'sometimes|in:full_time,part_time,temporary,tamheer,percentage,locum,probation',
-            'start_date' => 'sometimes|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'basic_salary' => 'sometimes|numeric|min:0',
-            'housing_allowance' => 'nullable|numeric|min:0',
-            'transport_allowance' => 'nullable|numeric|min:0',
-            'food_allowance' => 'nullable|numeric|min:0',
-            'phone_allowance' => 'nullable|numeric|min:0',
-            'other_allowances' => 'nullable|numeric|min:0',
-            'status' => 'sometimes|in:draft,pending_approval,active,expired,terminated,renewed,suspended',
-        ]);
 
         try {
             $data = $request->only([
