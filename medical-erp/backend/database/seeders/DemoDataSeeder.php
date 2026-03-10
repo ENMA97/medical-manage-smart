@@ -170,7 +170,7 @@ class DemoDataSeeder extends Seeder
         $annual = $leaveTypes[0]; // ANNUAL
 
         // Create some sample leave requests
-        $statuses = ['pending', 'approved', 'rejected'];
+        $statuses = ['submitted', 'approved', 'rejected'];
         foreach ($employees->take(3) as $i => $employee) {
             LeaveRequest::create([
                 'id' => Str::uuid(),
@@ -446,7 +446,7 @@ class DemoDataSeeder extends Seeder
                         'employee_name' => $employee->first_name . ' ' . $employee->last_name,
                         'employee_number' => $employee->employee_number,
                     ],
-                    'status' => $i === 0 ? 'approved' : 'pending',
+                    'status' => $i === 0 ? 'approved' : 'pending_approval',
                     'generated_by' => $admin?->id,
                     'approved_by' => $i === 0 ? $admin?->id : null,
                     'approved_at' => $i === 0 ? now() : null,

@@ -26,8 +26,8 @@ class DashboardController extends Controller
             ->where('end_date', '>=', now())
             ->count();
         $departmentsCount = Department::where('is_active', true)->count();
-        $pendingLeaveRequests = LeaveRequest::where('status', 'pending')->count();
-        $pendingResignations = Resignation::where('status', 'pending')->count();
+        $pendingLeaveRequests = LeaveRequest::whereIn('status', ['submitted', 'pending_substitute', 'pending_supervisor', 'pending_hr', 'pending_admin_manager', 'pending_general_manager'])->count();
+        $pendingResignations = Resignation::whereIn('status', ['submitted', 'under_review'])->count();
 
         return response()->json([
             'success' => true,
@@ -94,7 +94,7 @@ class DashboardController extends Controller
     public function leaveStats(): JsonResponse
     {
         $totalRequests = LeaveRequest::count();
-        $pending = LeaveRequest::where('status', 'pending')->count();
+        $pending = LeaveRequest::whereIn('status', ['submitted', 'pending_substitute', 'pending_supervisor', 'pending_hr', 'pending_admin_manager', 'pending_general_manager'])->count();
         $approved = LeaveRequest::where('status', 'approved')->count();
         $rejected = LeaveRequest::where('status', 'rejected')->count();
         $cancelled = LeaveRequest::where('status', 'cancelled')->count();
@@ -143,14 +143,14 @@ class DashboardController extends Controller
 
         // طلبات إجازة معلقة
         $pendingLeaveRequests = LeaveRequest::with('employee:id,first_name,last_name,first_name_ar,last_name_ar,employee_number')
-            ->where('status', 'pending')
+            ->whereIn('status', ['submitted', 'pending_substitute', 'pending_supervisor', 'pending_hr', 'pending_admin_manager', 'pending_general_manager'])
             ->orderBy('created_at')
             ->limit(10)
             ->get();
 
         // استقالات معلقة
         $pendingResignations = Resignation::with('employee:id,first_name,last_name,first_name_ar,last_name_ar,employee_number')
-            ->where('status', 'pending')
+            ->whereIn('status', ['submitted', 'under_review'])
             ->orderBy('created_at')
             ->limit(10)
             ->get();
