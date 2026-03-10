@@ -93,7 +93,7 @@ class AiInsightsController extends Controller
             ->get();
 
         // تحليل الأقسام الأكثر إجازات
-        $departmentPatterns = LeaveRequest::where('status', 'approved')
+        $departmentPatterns = LeaveRequest::where('leave_requests.status', 'approved')
             ->where('start_date', '>=', now()->subYear())
             ->join('employees', 'leave_requests.employee_id', '=', 'employees.id')
             ->join('departments', 'employees.department_id', '=', 'departments.id')
@@ -273,7 +273,12 @@ class AiInsightsController extends Controller
             'data' => [
                 'analysis_id' => $log->id,
                 'summary' => $summary,
-                'high_risk_employees' => collect($riskScores)->take(10)->load('employee:id,first_name,last_name,first_name_ar,last_name_ar,employee_number'),
+                'high_risk_employees' => TurnoverRiskScore::with('employee:id,first_name,last_name,first_name_ar,last_name_ar,employee_number')
+                    ->where('analysis_log_id', $log->id)
+                    ->where('risk_score', '>=', 0.5)
+                    ->orderBy('risk_score', 'desc')
+                    ->take(10)
+                    ->get(),
                 'processing_time_ms' => $processingTime,
             ],
         ]);

@@ -72,6 +72,7 @@ class LoanTest extends TestCase
             'paid_installments' => 0,
             'remaining_installments' => 10,
             'start_date' => now()->addDay(),
+            'reason' => 'حالة طارئة',
             'status' => 'pending',
         ]);
 
@@ -99,6 +100,7 @@ class LoanTest extends TestCase
             'paid_installments' => 0,
             'remaining_installments' => 10,
             'start_date' => now()->addDay(),
+            'reason' => 'حالة طارئة',
             'status' => 'pending',
         ]);
 
@@ -109,7 +111,7 @@ class LoanTest extends TestCase
 
         $this->assertDatabaseHas('employee_loans', [
             'id' => $loan->id,
-            'status' => 'rejected',
+            'status' => 'cancelled',
         ]);
     }
 
@@ -126,6 +128,7 @@ class LoanTest extends TestCase
             'paid_installments' => 0,
             'remaining_installments' => 10,
             'start_date' => now()->addDay(),
+            'reason' => 'حالة طارئة',
             'status' => 'approved',
         ]);
 

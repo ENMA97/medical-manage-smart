@@ -44,6 +44,7 @@ class ResignationTest extends TestCase
     {
         $response = $this->actingAs($this->regularUser)->postJson('/api/resignations', [
             'employee_id' => $this->employee->id,
+            'type' => 'resignation',
             'request_date' => now()->addDays(30)->format('Y-m-d'),
             'last_working_day' => now()->addDays(60)->format('Y-m-d'),
             'reason' => 'فرصة عمل أفضل',
@@ -62,7 +63,7 @@ class ResignationTest extends TestCase
             'request_date' => now()->addDays(30),
             'last_working_day' => now()->addDays(60),
             'reason' => 'فرصة عمل أفضل',
-            'status' => 'pending',
+            'status' => 'submitted',
         ]);
 
         $response = $this->actingAs($this->admin)->postJson("/api/resignations/{$resignation->id}/approve");
@@ -80,7 +81,7 @@ class ResignationTest extends TestCase
             'request_date' => now()->addDays(30),
             'last_working_day' => now()->addDays(60),
             'reason' => 'أسباب شخصية',
-            'status' => 'pending',
+            'status' => 'submitted',
         ]);
 
         $response = $this->actingAs($this->admin)->postJson("/api/resignations/{$resignation->id}/reject", [

@@ -99,7 +99,7 @@ class LetterController extends Controller
             'content' => $content,
             'content_ar' => $contentAr,
             'variables_used' => $variables,
-            'status' => $template->requires_approval ? 'pending' : 'approved',
+            'status' => $template->requires_approval ? 'pending_approval' : 'approved',
             'generated_by' => auth()->id(),
             'approved_by' => $template->requires_approval ? null : auth()->id(),
             'approved_at' => $template->requires_approval ? null : now(),
@@ -135,7 +135,7 @@ class LetterController extends Controller
     {
         $letter = GeneratedLetter::findOrFail($id);
 
-        if ($letter->status !== 'pending') {
+        if ($letter->status !== 'pending_approval') {
             return response()->json([
                 'success' => false,
                 'message' => 'لا يمكن اعتماد هذا الخطاب',

@@ -54,7 +54,7 @@ class ResignationController extends Controller
                 'direct_manager_id', 'notes',
             ]);
 
-            $data['status'] = 'pending';
+            $data['status'] = 'submitted';
             $data['created_by'] = auth()->id();
 
             $resignation = Resignation::create($data);
@@ -97,7 +97,7 @@ class ResignationController extends Controller
     {
         $resignation = Resignation::findOrFail($id);
 
-        if ($resignation->status !== 'pending' && $resignation->status !== 'under_review') {
+        if (!in_array($resignation->status, ['submitted', 'under_review'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'لا يمكن الموافقة على هذه الاستقالة في حالتها الحالية',
@@ -147,7 +147,7 @@ class ResignationController extends Controller
     {
         $resignation = Resignation::findOrFail($id);
 
-        if ($resignation->status !== 'pending' && $resignation->status !== 'under_review') {
+        if (!in_array($resignation->status, ['submitted', 'under_review'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'لا يمكن رفض هذه الاستقالة في حالتها الحالية',

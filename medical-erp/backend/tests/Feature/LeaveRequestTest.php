@@ -59,6 +59,7 @@ class LeaveRequestTest extends TestCase
     public function test_employee_can_create_leave_request(): void
     {
         $response = $this->actingAs($this->regularUser)->postJson('/api/leave-requests', [
+            'employee_id' => $this->employee->id,
             'leave_type_id' => $this->leaveType->id,
             'start_date' => '2026-04-01',
             'end_date' => '2026-04-05',
@@ -80,7 +81,7 @@ class LeaveRequestTest extends TestCase
             'start_date' => '2026-04-01',
             'end_date' => '2026-04-05',
             'total_days' => 5,
-            'status' => 'pending',
+            'status' => 'submitted',
         ]);
 
         $response = $this->actingAs($this->admin)->postJson("/api/leave-requests/{$leave->id}/approve");
@@ -99,11 +100,11 @@ class LeaveRequestTest extends TestCase
             'start_date' => '2026-04-01',
             'end_date' => '2026-04-05',
             'total_days' => 5,
-            'status' => 'pending',
+            'status' => 'submitted',
         ]);
 
         $response = $this->actingAs($this->admin)->postJson("/api/leave-requests/{$leave->id}/reject", [
-            'reason' => 'ضغط عمل',
+            'comment' => 'ضغط عمل',
         ]);
 
         $response->assertOk()
@@ -120,10 +121,12 @@ class LeaveRequestTest extends TestCase
             'start_date' => '2026-04-01',
             'end_date' => '2026-04-05',
             'total_days' => 5,
-            'status' => 'pending',
+            'status' => 'submitted',
         ]);
 
-        $response = $this->actingAs($this->regularUser)->postJson("/api/leave-requests/{$leave->id}/cancel");
+        $response = $this->actingAs($this->regularUser)->postJson("/api/leave-requests/{$leave->id}/cancel", [
+            'cancellation_reason' => 'تغيرت الخطط',
+        ]);
 
         $response->assertOk()
             ->assertJsonPath('success', true);

@@ -35,13 +35,16 @@ class LetterTest extends TestCase
 
         $this->template = LetterTemplate::create([
             'id' => Str::uuid(),
+            'code' => 'SALARY_CERT',
             'name' => 'Salary Certificate',
             'name_ar' => 'شهادة راتب',
             'letter_type' => 'salary_certificate',
             'body_template' => 'This certifies that {employee_name} works at our company.',
             'body_template_ar' => 'نشهد بأن {employee_name} يعمل لدينا.',
+            'available_variables' => ['employee_name'],
             'requires_approval' => true,
             'is_active' => true,
+            'created_by' => $this->admin->id,
         ]);
     }
 
@@ -83,7 +86,8 @@ class LetterTest extends TestCase
             'letter_type' => 'salary_certificate',
             'content' => 'Test content',
             'content_ar' => 'محتوى تجريبي',
-            'status' => 'pending',
+            'variables_used' => ['employee_name' => 'Test'],
+            'status' => 'pending_approval',
             'generated_by' => $this->admin->id,
         ]);
 
@@ -108,6 +112,7 @@ class LetterTest extends TestCase
             'letter_type' => 'salary_certificate',
             'content' => 'Test content',
             'content_ar' => 'محتوى تجريبي',
+            'variables_used' => ['employee_name' => 'Test'],
             'status' => 'approved',
             'generated_by' => $this->admin->id,
         ]);

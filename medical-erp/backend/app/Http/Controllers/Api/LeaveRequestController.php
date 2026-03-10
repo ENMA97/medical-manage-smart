@@ -81,7 +81,7 @@ class LeaveRequestController extends Controller
                 STR_PAD_LEFT
             );
 
-            $data['status'] = 'pending';
+            $data['status'] = 'submitted';
             $data['current_approval_step'] = 1;
             $data['total_approval_steps'] = 2;
 
@@ -138,7 +138,8 @@ class LeaveRequestController extends Controller
     {
         $leaveRequest = LeaveRequest::findOrFail($id);
 
-        if ($leaveRequest->status !== 'pending' && $leaveRequest->status !== 'partially_approved') {
+        $approvableStatuses = ['submitted', 'pending_substitute', 'pending_supervisor', 'pending_hr', 'pending_admin_manager', 'pending_general_manager'];
+        if (!in_array($leaveRequest->status, $approvableStatuses)) {
             return response()->json([
                 'success' => false,
                 'message' => 'لا يمكن الموافقة على هذا الطلب في حالته الحالية',
@@ -156,7 +157,7 @@ class LeaveRequestController extends Controller
                 LeaveApproval::create([
                     'leave_request_id' => $leaveRequest->id,
                     'step_order' => $leaveRequest->current_approval_step,
-                    'approval_role' => 'manager',
+                    'approval_role' => 'supervisor',
                     'approver_id' => auth()->id(),
                     'status' => 'approved',
                     'comment' => $request->input('comment'),
@@ -176,7 +177,7 @@ class LeaveRequestController extends Controller
                     }
                 } else {
                     $leaveRequest->update([
-                        'status' => 'partially_approved',
+                        'status' => 'pending_hr',
                         'current_approval_step' => $leaveRequest->current_approval_step + 1,
                     ]);
                 }
@@ -206,7 +207,8 @@ class LeaveRequestController extends Controller
     {
         $leaveRequest = LeaveRequest::findOrFail($id);
 
-        if ($leaveRequest->status !== 'pending' && $leaveRequest->status !== 'partially_approved') {
+        $rejectableStatuses = ['submitted', 'pending_substitute', 'pending_supervisor', 'pending_hr', 'pending_admin_manager', 'pending_general_manager'];
+        if (!in_array($leaveRequest->status, $rejectableStatuses)) {
             return response()->json([
                 'success' => false,
                 'message' => 'لا يمكن رفض هذا الطلب في حالته الحالية',
@@ -223,7 +225,7 @@ class LeaveRequestController extends Controller
                 LeaveApproval::create([
                     'leave_request_id' => $leaveRequest->id,
                     'step_order' => $leaveRequest->current_approval_step,
-                    'approval_role' => 'manager',
+                    'approval_role' => 'supervisor',
                     'approver_id' => auth()->id(),
                     'status' => 'rejected',
                     'comment' => $request->input('comment'),
@@ -265,7 +267,7 @@ class LeaveRequestController extends Controller
     {
         $leaveRequest = LeaveRequest::findOrFail($id);
 
-        if (!in_array($leaveRequest->status, ['pending', 'partially_approved', 'approved'])) {
+        if (!in_array($leaveRequest->status, ['submitted', 'pending_substitute', 'pending_supervisor', 'pending_hr', 'pending_admin_manager', 'pending_general_manager', 'approved'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'لا يمكن إلغاء هذا الطلب في حالته الحالية',

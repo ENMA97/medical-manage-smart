@@ -158,7 +158,7 @@ class LoanController extends Controller
             ], 422);
         }
 
-        $loan->update(['status' => 'rejected']);
+        $loan->update(['status' => 'cancelled']);
 
         return response()->json([
             'success' => true,

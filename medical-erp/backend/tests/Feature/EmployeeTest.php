@@ -52,6 +52,7 @@ class EmployeeTest extends TestCase
             'employee_number' => 'NEW-001',
             'first_name' => 'Test',
             'last_name' => 'User',
+            'email' => 'test-new@example.com',
             'phone' => '0551234567',
             'department_id' => $this->department->id,
             'hire_date' => '2024-01-01',
