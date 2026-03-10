@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Department;
 use App\Models\Employee;
+use App\Models\Position;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -17,6 +18,7 @@ class EmployeeFactory extends Factory
             'id' => Str::uuid()->toString(),
             'employee_number' => $this->faker->unique()->numerify('EMP-####'),
             'department_id' => Department::factory(),
+            'position_id' => Position::factory(),
             'first_name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
             'first_name_ar' => 'محمد',

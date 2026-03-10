@@ -31,7 +31,7 @@ class AiInsightsController extends Controller
             ->get();
 
         $recommendations = AiRecommendation::whereIn('status', ['new', 'under_review'])
-            ->orderByRaw("FIELD(priority, 'urgent', 'high', 'medium', 'low')")
+            ->orderByRaw("CASE priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 WHEN 'low' THEN 4 ELSE 5 END")
             ->limit(5)
             ->get();
 
@@ -83,10 +83,12 @@ class AiInsightsController extends Controller
         ]);
 
         // تحليل أنماط الإجازات حسب الشهر
+        $isSqlite = DB::getDriverName() === 'sqlite';
+        $monthExpr = $isSqlite ? "CAST(strftime('%m', start_date) AS INTEGER)" : 'MONTH(start_date)';
         $monthlyPatterns = LeaveRequest::where('status', 'approved')
             ->where('start_date', '>=', now()->subYear())
-            ->selectRaw('MONTH(start_date) as month, COUNT(*) as count, SUM(total_days) as total_days')
-            ->groupBy(DB::raw('MONTH(start_date)'))
+            ->selectRaw("{$monthExpr} as month, COUNT(*) as count, SUM(total_days) as total_days")
+            ->groupBy(DB::raw($monthExpr))
             ->orderBy('month')
             ->get();
 
@@ -101,10 +103,11 @@ class AiInsightsController extends Controller
             ->get();
 
         // تحليل أنماط أيام الأسبوع
+        $dowExpr = $isSqlite ? "CAST(strftime('%w', start_date) AS INTEGER)" : 'DAYOFWEEK(start_date)';
         $dayOfWeekPatterns = LeaveRequest::where('status', 'approved')
             ->where('start_date', '>=', now()->subYear())
-            ->selectRaw('DAYOFWEEK(start_date) as day_of_week, COUNT(*) as count')
-            ->groupBy(DB::raw('DAYOFWEEK(start_date)'))
+            ->selectRaw("{$dowExpr} as day_of_week, COUNT(*) as count")
+            ->groupBy(DB::raw($dowExpr))
             ->orderBy('count', 'desc')
             ->get();
 
@@ -285,7 +288,7 @@ class AiInsightsController extends Controller
             ->when($request->filled('type'), fn($q) => $q->where('prediction_type', $request->input('type')))
             ->when($request->filled('impact'), fn($q) => $q->where('impact_level', $request->input('impact')))
             ->when($request->boolean('active_only', true), fn($q) => $q->where('prediction_date', '>=', now()))
-            ->orderByRaw("FIELD(impact_level, 'critical', 'high', 'medium', 'low')")
+            ->orderByRaw("CASE impact_level WHEN 'critical' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 WHEN 'low' THEN 4 ELSE 5 END")
             ->orderBy('prediction_date')
             ->paginate($request->input('per_page', 15));
 
@@ -324,7 +327,7 @@ class AiInsightsController extends Controller
             ->when($request->filled('type'), fn($q) => $q->where('recommendation_type', $request->input('type')))
             ->when($request->filled('status'), fn($q) => $q->where('status', $request->input('status')))
             ->when($request->filled('priority'), fn($q) => $q->where('priority', $request->input('priority')))
-            ->orderByRaw("FIELD(priority, 'urgent', 'high', 'medium', 'low')")
+            ->orderByRaw("CASE priority WHEN 'urgent' THEN 1 WHEN 'high' THEN 2 WHEN 'medium' THEN 3 WHEN 'low' THEN 4 ELSE 5 END")
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 15));
 

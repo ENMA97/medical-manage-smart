@@ -15,17 +15,15 @@ class PositionFactory extends Factory
     {
         return [
             'id' => Str::uuid()->toString(),
-            'code' => 'POS-' . strtoupper(fake()->unique()->bothify('???##')),
-            'title' => fake()->jobTitle(),
-            'title_ar' => fake()->jobTitle(),
+            'code' => $this->faker->unique()->numerify('POS-####'),
+            'title' => $this->faker->jobTitle(),
+            'title_ar' => 'وظيفة',
             'department_id' => Department::factory(),
-            'category' => fake()->randomElement(['medical', 'administrative', 'technical', 'support']),
-            'description' => fake()->sentence(),
-            'requirements' => fake()->sentence(),
-            'min_salary' => fake()->numberBetween(5000, 10000),
-            'max_salary' => fake()->numberBetween(10000, 30000),
+            'category' => $this->faker->randomElement(['medical', 'administrative', 'technical']),
+            'min_salary' => 5000,
+            'max_salary' => 15000,
             'is_active' => true,
-            'sort_order' => fake()->numberBetween(1, 100),
+            'sort_order' => 0,
         ];
     }
 }

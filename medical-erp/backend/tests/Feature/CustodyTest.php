@@ -46,7 +46,7 @@ class CustodyTest extends TestCase
             'employee_id' => $this->employee->id,
             'item_name' => 'Laptop',
             'item_name_ar' => 'حاسب محمول',
-            'item_type' => 'electronics',
+            'item_type' => 'laptop',
             'serial_number' => 'SN-TEST-001',
             'delivery_date' => now()->format('Y-m-d'),
             'condition_on_delivery' => 'new',
@@ -63,7 +63,7 @@ class CustodyTest extends TestCase
             'employee_id' => $this->employee->id,
             'item_name' => 'Mobile Phone',
             'item_name_ar' => 'هاتف جوال',
-            'item_type' => 'electronics',
+            'item_type' => 'laptop',
             'serial_number' => 'SN-VIEW-001',
             'delivery_date' => now(),
             'condition_on_delivery' => 'new',
@@ -103,7 +103,7 @@ class CustodyTest extends TestCase
         $response = $this->actingAs($this->regularUser)->postJson('/api/custody', [
             'employee_id' => $this->employee->id,
             'item_name' => 'Laptop',
-            'item_type' => 'electronics',
+            'item_type' => 'laptop',
         ]);
 
         $response->assertForbidden();
