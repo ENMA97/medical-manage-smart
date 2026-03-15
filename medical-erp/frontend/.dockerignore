@@ -1,0 +1,14 @@
+.env
+.env.*
+node_modules/
+dist/
+.git/
+.gitignore
+*.log
+src/test/
+vitest.config.*
+coverage/
+.eslintcache
+README.md
+Dockerfile
+.dockerignore
