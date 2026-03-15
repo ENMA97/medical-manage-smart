@@ -6,7 +6,7 @@ import Modal from '../components/ui/Modal';
 
 const typeLabels = { permanent: 'دائم', temporary: 'مؤقت', part_time: 'دوام جزئي', probation: 'تجريبي', full_time: 'دوام كامل', tamheer: 'تمهير', percentage: 'نسبة', locum: 'بديل' };
 const statusLabels = { active: 'ساري', expired: 'منتهي', terminated: 'ملغي', renewed: 'مجدد', draft: 'مسودة', pending_approval: 'بانتظار الموافقة' };
-const statusColors = { active: 'bg-green-100 text-green-700', expired: 'bg-red-100 text-red-700', terminated: 'bg-gray-100 text-gray-600', renewed: 'bg-blue-100 text-blue-700', draft: 'bg-yellow-100 text-yellow-700', pending_approval: 'bg-orange-100 text-orange-700' };
+const statusColors = { active: 'bg-green-100 text-green-700', expired: 'bg-red-100 text-red-700', terminated: 'bg-gray-100 text-gray-600', renewed: 'bg-teal-100 text-teal-700', draft: 'bg-yellow-100 text-yellow-700', pending_approval: 'bg-orange-100 text-orange-700' };
 
 const emptyForm = {
   employee_id: '', contract_type: 'full_time', start_date: '', end_date: '',
@@ -129,7 +129,7 @@ export default function Contracts() {
       <input
         type={type} value={form[name]} onChange={(e) => set(name, e.target.value)}
         required={required}
-        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
       />
     </div>
   );
@@ -149,7 +149,7 @@ export default function Contracts() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-800">العقود</h1>
-        <button onClick={openCreate} className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+        <button onClick={openCreate} className="px-4 py-2 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-700 transition-colors">
           عقد جديد
         </button>
       </div>
@@ -157,14 +157,14 @@ export default function Contracts() {
       <div className="relative">
         <input
           type="text" placeholder="البحث..." value={search} onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-80 pl-4 pr-10 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full sm:w-80 pl-4 pr-10 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
         />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin" />
           </div>
         ) : contracts.length === 0 ? (
           <div className="text-center py-16 text-gray-500">لا يوجد عقود</div>
@@ -195,7 +195,7 @@ export default function Contracts() {
                     </td>
                     <td className="px-4 py-3">
                       {(c.status === 'active' || c.status === 'expired') && (
-                        <button onClick={() => openRenew(c)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                        <button onClick={() => openRenew(c)} className="text-xs text-teal-600 hover:text-teal-800 font-medium">
                           تجديد
                         </button>
                       )}
@@ -226,7 +226,7 @@ export default function Contracts() {
             <select
               value={form.employee_id} onChange={(e) => set('employee_id', e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             >
               <option value="">اختر الموظف</option>
               {employees.map((emp) => (
@@ -241,7 +241,7 @@ export default function Contracts() {
               <label className="block text-xs text-gray-600 mb-1">نوع العقد</label>
               <select
                 value={form.contract_type} onChange={(e) => set('contract_type', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               >
                 {Object.entries(typeLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
@@ -259,7 +259,7 @@ export default function Contracts() {
           </div>
           <div className="flex gap-2 justify-end pt-2">
             <button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">إلغاء</button>
-            <button type="submit" disabled={saving} className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+            <button type="submit" disabled={saving} className="px-4 py-2 text-sm text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50">
               {saving ? 'جاري الحفظ...' : 'إنشاء العقد'}
             </button>
           </div>

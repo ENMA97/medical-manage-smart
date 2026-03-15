@@ -120,7 +120,7 @@ export default function Positions() {
         <h1 className="text-xl font-bold text-gray-800">المسميات الوظيفية</h1>
         <button
           onClick={openNew}
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -137,12 +137,12 @@ export default function Positions() {
             placeholder="بحث بالاسم أو الرمز..."
             value={filter.search}
             onChange={(e) => setFilter({ ...filter, search: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500"
           />
           <select
             value={filter.department_id}
             onChange={(e) => setFilter({ ...filter, department_id: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500"
           >
             <option value="">جميع الأقسام</option>
             {departments.map(d => (
@@ -161,11 +161,11 @@ export default function Positions() {
           <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">الرمز *</label>
-              <input type="text" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+              <input type="text" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">القسم *</label>
-              <select value={form.department_id} onChange={(e) => setForm({ ...form, department_id: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+              <select value={form.department_id} onChange={(e) => setForm({ ...form, department_id: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500">
                 <option value="">اختر القسم</option>
                 {departments.map(d => (
                   <option key={d.id} value={d.id}>{d.name_ar || d.name}</option>
@@ -174,15 +174,15 @@ export default function Positions() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">المسمى (عربي) *</label>
-              <input type="text" value={form.title_ar} onChange={(e) => setForm({ ...form, title_ar: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+              <input type="text" value={form.title_ar} onChange={(e) => setForm({ ...form, title_ar: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">المسمى (إنجليزي)</label>
-              <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+              <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">التصنيف</label>
-              <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+              <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500">
                 <option value="">اختر التصنيف</option>
                 <option value="executive">تنفيذي</option>
                 <option value="management">إداري</option>
@@ -194,20 +194,20 @@ export default function Positions() {
             <div className="flex items-center gap-4">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">الحد الأدنى للراتب</label>
-                <input type="number" value={form.min_salary} onChange={(e) => setForm({ ...form, min_salary: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                <input type="number" value={form.min_salary} onChange={(e) => setForm({ ...form, min_salary: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500" />
               </div>
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">الحد الأقصى للراتب</label>
-                <input type="number" value={form.max_salary} onChange={(e) => setForm({ ...form, max_salary: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+                <input type="number" value={form.max_salary} onChange={(e) => setForm({ ...form, max_salary: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500" />
               </div>
             </div>
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
-              <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
+              <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500" />
             </div>
             <div className="sm:col-span-2 flex gap-2 justify-end">
               <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">إلغاء</button>
-              <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
+              <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50">
                 {saving ? 'جاري الحفظ...' : editingId ? 'تحديث' : 'إضافة'}
               </button>
             </div>
@@ -219,7 +219,7 @@ export default function Positions() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin" />
           </div>
         ) : positions.length === 0 ? (
           <div className="text-center py-16 text-gray-500">لا يوجد مسميات وظيفية</div>
@@ -257,7 +257,7 @@ export default function Positions() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => openEdit(pos)} className="text-blue-600 hover:text-blue-800 text-xs">تعديل</button>
+                        <button onClick={() => openEdit(pos)} className="text-teal-600 hover:text-teal-800 text-xs">تعديل</button>
                         <button onClick={() => handleDelete(pos.id)} className="text-red-600 hover:text-red-800 text-xs">حذف</button>
                       </div>
                     </td>

@@ -11,7 +11,7 @@ const riskColors = {
 
 const priorityColors = {
   low: 'bg-gray-100 text-gray-800',
-  medium: 'bg-blue-100 text-blue-800',
+  medium: 'bg-teal-100 text-teal-800',
   high: 'bg-orange-100 text-orange-800',
   urgent: 'bg-red-100 text-red-800',
 };
@@ -116,7 +116,7 @@ export default function AiInsights() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
       </div>
     );
   }
@@ -133,7 +133,7 @@ export default function AiInsights() {
           <button
             onClick={runLeaveAnalysis}
             disabled={analyzing}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium"
+            className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 text-sm font-medium"
           >
             {analyzing ? 'جاري التحليل...' : 'تحليل الإجازات'}
           </button>
@@ -156,7 +156,7 @@ export default function AiInsights() {
               onClick={() => setTab(t.id)}
               className={`pb-3 px-1 text-sm font-medium border-b-2 transition-colors ${
                 tab === t.id
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -360,7 +360,7 @@ const factorLabels = {
 
 function SummaryCard({ title, value, color }) {
   const colors = {
-    blue: 'bg-blue-50 text-blue-700 border-blue-100',
+    blue: 'bg-teal-50 text-teal-700 border-teal-100',
     yellow: 'bg-yellow-50 text-yellow-700 border-yellow-100',
     purple: 'bg-purple-50 text-purple-700 border-purple-100',
     red: 'bg-red-50 text-red-700 border-red-100',

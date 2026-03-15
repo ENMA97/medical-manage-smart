@@ -104,14 +104,14 @@ export default function EmployeeForm() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <button onClick={() => navigate('/employees')} className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
+      <button onClick={() => navigate('/employees')} className="text-sm text-teal-600 hover:text-teal-800 flex items-center gap-1">
         <svg className="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
@@ -212,7 +212,7 @@ export default function EmployeeForm() {
           <button type="button" onClick={() => navigate('/employees')} className="px-6 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
             إلغاء
           </button>
-          <button type="submit" disabled={saving} className="px-6 py-2.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium">
+          <button type="submit" disabled={saving} className="px-6 py-2.5 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700 disabled:opacity-50 font-medium">
             {saving ? 'جاري الحفظ...' : isEdit ? 'حفظ التعديلات' : 'إضافة الموظف'}
           </button>
         </div>
@@ -243,7 +243,7 @@ function Field({ label, error, children, full }) {
 }
 
 function inputClass(hasError) {
-  return `w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+  return `w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
     hasError ? 'border-red-300 bg-red-50' : 'border-gray-200'
   }`;
 }

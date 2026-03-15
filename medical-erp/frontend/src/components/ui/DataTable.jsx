@@ -3,7 +3,7 @@ export default function DataTable({ columns, data, loading, emptyMessage = 'لا
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
         <div className="flex items-center justify-center py-16">
-          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin" />
         </div>
       </div>
     );

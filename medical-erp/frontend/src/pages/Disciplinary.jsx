@@ -9,7 +9,7 @@ const statusLabels = {
   reported: 'مُبلّغ عنها', under_investigation: 'تحت التحقيق', decided: 'صدر قرار', appealed: 'تم التظلم', closed: 'مغلقة',
 };
 const statusColors = {
-  reported: 'bg-yellow-100 text-yellow-700', under_investigation: 'bg-blue-100 text-blue-700',
+  reported: 'bg-yellow-100 text-yellow-700', under_investigation: 'bg-teal-100 text-teal-700',
   decided: 'bg-purple-100 text-purple-700', appealed: 'bg-orange-100 text-orange-700', closed: 'bg-gray-100 text-gray-600',
 };
 const severityLabels = { minor: 'بسيطة', moderate: 'متوسطة', major: 'جسيمة', critical: 'خطيرة' };
@@ -19,7 +19,7 @@ const severityColors = {
 };
 const decisionStatusLabels = { draft: 'مسودة', issued: 'صادر', notified: 'مُبلّغ', acknowledged: 'اطلع الموظف', appealed: 'تم التظلم', final: 'نهائي' };
 const decisionStatusColors = {
-  draft: 'bg-gray-100 text-gray-600', issued: 'bg-blue-100 text-blue-700', notified: 'bg-yellow-100 text-yellow-700',
+  draft: 'bg-gray-100 text-gray-600', issued: 'bg-teal-100 text-teal-700', notified: 'bg-yellow-100 text-yellow-700',
   acknowledged: 'bg-purple-100 text-purple-700', appealed: 'bg-orange-100 text-orange-700', final: 'bg-green-100 text-green-700',
 };
 
@@ -360,7 +360,7 @@ export default function Disciplinary() {
                       <td className="px-4 py-3">
                         <div className="flex gap-1">
                           <button onClick={() => openDetail(v.id)} title="التفاصيل"
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                            className="p-1.5 text-teal-600 hover:bg-teal-50 rounded-lg transition">
                             {Icons.investigation}
                           </button>
                           {v.status === 'reported' && v.violation_type?.requires_investigation && (
@@ -469,7 +469,7 @@ export default function Disciplinary() {
                               {severityLabels[type.severity]}
                             </span>
                             {type.requires_investigation && (
-                              <span className="px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-700 flex items-center gap-1">
+                              <span className="px-2 py-0.5 rounded-full text-xs bg-teal-100 text-teal-700 flex items-center gap-1">
                                 {Icons.investigation}
                                 يتطلب تحقيق
                               </span>
@@ -605,7 +605,7 @@ export default function Disciplinary() {
                   </div>
                 )}
                 {suggestedPenalty.requires_investigation && (
-                  <div className="col-span-2 flex items-center gap-1 text-blue-600">
+                  <div className="col-span-2 flex items-center gap-1 text-teal-600">
                     {Icons.investigation}
                     <span className="text-sm font-medium">هذه المخالفة تتطلب تشكيل لجنة تحقيق</span>
                   </div>
@@ -665,10 +665,10 @@ export default function Disciplinary() {
 
             {/* Committee info */}
             {showDetail.committee && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-2">
                   {Icons.committee}
-                  <span className="font-bold text-blue-800">لجنة التحقيق: {showDetail.committee.name_ar}</span>
+                  <span className="font-bold text-teal-800">لجنة التحقيق: {showDetail.committee.name_ar}</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {showDetail.committee.members?.map(m => (

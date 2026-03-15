@@ -94,14 +94,14 @@ export default function Letters() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-800">إدارة الخطابات</h1>
-        <button onClick={openCreate} className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+        <button onClick={openCreate} className="px-4 py-2 bg-teal-600 text-white text-sm rounded-lg hover:bg-teal-700 transition-colors">
           خطاب جديد
         </button>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>
+          <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin" /></div>
         ) : letters.length === 0 ? (
           <div className="text-center py-16 text-gray-500">لا يوجد خطابات مسجلة</div>
         ) : (
@@ -152,7 +152,7 @@ export default function Letters() {
             <select
               value={form.employee_id} onChange={(e) => set('employee_id', e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             >
               <option value="">اختر الموظف</option>
               {employees.map((emp) => (
@@ -167,7 +167,7 @@ export default function Letters() {
             <select
               value={form.template_id} onChange={(e) => set('template_id', e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
             >
               <option value="">اختر القالب</option>
               {templates.map((t) => (
@@ -178,11 +178,11 @@ export default function Letters() {
           <div>
             <label className="block text-xs text-gray-600 mb-1">ملاحظات (اختياري)</label>
             <textarea value={form.notes} onChange={(e) => set('notes', e.target.value)} rows={2}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" />
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none" />
           </div>
           <div className="flex gap-2 justify-end pt-2">
             <button type="button" onClick={() => setShowCreate(false)} className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">إلغاء</button>
-            <button type="submit" disabled={saving} className="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+            <button type="submit" disabled={saving} className="px-4 py-2 text-sm text-white bg-teal-600 rounded-lg hover:bg-teal-700 disabled:opacity-50">
               {saving ? 'جاري الإنشاء...' : 'إنشاء الخطاب'}
             </button>
           </div>

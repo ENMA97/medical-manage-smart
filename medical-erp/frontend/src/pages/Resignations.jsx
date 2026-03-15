@@ -85,7 +85,7 @@ export default function Resignations() {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>
+          <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin" /></div>
         ) : resignations.length === 0 ? (
           <div className="text-center py-16 text-gray-500">لا يوجد استقالات</div>
         ) : (

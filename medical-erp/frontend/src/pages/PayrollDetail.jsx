@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import payrollService from '../services/payrollService';
 
 const statusLabels = { draft: 'مسودة', approved: 'معتمد', paid: 'مدفوع' };
-const statusColors = { draft: 'bg-yellow-100 text-yellow-700', approved: 'bg-green-100 text-green-700', paid: 'bg-blue-100 text-blue-700' };
+const statusColors = { draft: 'bg-yellow-100 text-yellow-700', approved: 'bg-green-100 text-green-700', paid: 'bg-teal-100 text-teal-700' };
 
 export default function PayrollDetail() {
   const { id } = useParams();
@@ -30,7 +30,7 @@ export default function PayrollDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin" />
       </div>
     );
   }
@@ -57,7 +57,7 @@ export default function PayrollDetail() {
 
   return (
     <div className="space-y-4">
-      <button onClick={() => navigate('/payroll')} className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
+      <button onClick={() => navigate('/payroll')} className="text-sm text-teal-600 hover:text-teal-800 flex items-center gap-1">
         <svg className="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
@@ -77,7 +77,7 @@ export default function PayrollDetail() {
             <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${statusColors[payroll.status] || 'bg-gray-100 text-gray-600'}`}>
               {statusLabels[payroll.status] || payroll.status}
             </span>
-            <button onClick={handleExport} className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <button onClick={handleExport} className="px-3 py-1.5 text-sm bg-teal-600 text-white rounded-lg hover:bg-teal-700">
               تصدير Excel
             </button>
           </div>

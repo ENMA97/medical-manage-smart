@@ -96,7 +96,7 @@ export default function ImportEmployees() {
             {/* File Drop Zone */}
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all"
+              className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-teal-400 hover:bg-teal-50 transition-all"
             >
               <input
                 ref={fileInputRef}
@@ -143,7 +143,7 @@ export default function ImportEmployees() {
                     onClick={() => setImportType(opt.value)}
                     className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                       importType === opt.value
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-teal-600 text-white'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
@@ -158,7 +158,7 @@ export default function ImportEmployees() {
               <button
                 type="submit"
                 disabled={!file || uploading}
-                className="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-3 px-4 bg-teal-600 hover:bg-teal-700 disabled:bg-teal-300 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 {uploading ? (
                   <>
@@ -193,7 +193,7 @@ export default function ImportEmployees() {
           <div className="mt-4 pt-4 border-t border-gray-100">
             <button
               onClick={downloadTemplate}
-              className="w-full py-2 px-4 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2 px-4 text-sm text-teal-600 hover:bg-teal-50 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -276,7 +276,7 @@ export default function ImportEmployees() {
 function ResultStat({ label, value, color }) {
   const colors = {
     green: 'bg-green-50 text-green-700',
-    blue: 'bg-blue-50 text-blue-700',
+    blue: 'bg-teal-50 text-teal-700',
     yellow: 'bg-yellow-50 text-yellow-700',
     red: 'bg-red-50 text-red-700',
   };
@@ -292,7 +292,7 @@ function ResultStat({ label, value, color }) {
 function Instruction({ number, text }) {
   return (
     <div className="flex gap-3 items-start">
-      <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+      <span className="w-6 h-6 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
         {number}
       </span>
       <p>{text}</p>

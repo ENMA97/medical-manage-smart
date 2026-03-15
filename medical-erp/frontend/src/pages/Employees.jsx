@@ -51,7 +51,7 @@ export default function Employees() {
         <h1 className="text-xl font-bold text-gray-800">الموظفون</h1>
         <Link
           to="/employees/new"
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -67,7 +67,7 @@ export default function Employees() {
           placeholder="البحث بالاسم أو الرقم الوظيفي..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full sm:w-80 pl-4 pr-10 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full sm:w-80 pl-4 pr-10 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-transparent"
         />
         <svg className="w-4 h-4 text-gray-400 absolute right-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -78,7 +78,7 @@ export default function Employees() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin" />
           </div>
         ) : employees.length === 0 ? (
           <div className="text-center py-16 text-gray-500">
@@ -111,7 +111,7 @@ export default function Employees() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <Link to={`/employees/${emp.id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                      <Link to={`/employees/${emp.id}`} className="text-teal-600 hover:text-teal-800 text-sm font-medium">
                         عرض
                       </Link>
                     </td>

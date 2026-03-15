@@ -3,7 +3,7 @@ import Modal from './Modal';
 export default function ConfirmDialog({ open, onClose, onConfirm, title = 'تأكيد', message, confirmLabel = 'تأكيد', confirmColor = 'red', loading = false }) {
   const colors = {
     red: 'bg-red-600 hover:bg-red-700',
-    blue: 'bg-blue-600 hover:bg-blue-700',
+    blue: 'bg-teal-600 hover:bg-teal-700',
     green: 'bg-green-600 hover:bg-green-700',
   };
 

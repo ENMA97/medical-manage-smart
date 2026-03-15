@@ -67,13 +67,13 @@ export default function Reports() {
           <div
             key={report.id}
             className={`bg-white rounded-xl shadow-sm border p-5 cursor-pointer transition-all hover:shadow-md ${
-              selectedReport === report.id ? 'border-blue-500 ring-2 ring-blue-100' : 'border-gray-100'
+              selectedReport === report.id ? 'border-teal-500 ring-2 ring-teal-100' : 'border-gray-100'
             }`}
             onClick={() => generateReport(report.id)}
           >
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={report.icon} />
                 </svg>
               </div>

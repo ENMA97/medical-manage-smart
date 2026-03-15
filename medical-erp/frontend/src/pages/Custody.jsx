@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import custodyService from '../services/custodyService';
 
 const typeLabels = { laptop: 'لابتوب', phone: 'هاتف', car: 'سيارة', key: 'مفتاح', badge: 'بطاقة', other: 'أخرى' };
-const statusColors = { assigned: 'bg-blue-100 text-blue-700', returned: 'bg-green-100 text-green-700' };
+const statusColors = { assigned: 'bg-teal-100 text-teal-700', returned: 'bg-green-100 text-green-700' };
 
 export default function Custody() {
   const [items, setItems] = useState([]);
@@ -39,7 +39,7 @@ export default function Custody() {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>
+          <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin" /></div>
         ) : items.length === 0 ? (
           <div className="text-center py-16 text-gray-500">لا يوجد عهد مسجلة</div>
         ) : (

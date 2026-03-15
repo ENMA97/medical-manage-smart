@@ -27,7 +27,7 @@ export default function EmployeeDetails() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin" />
       </div>
     );
   }
@@ -43,7 +43,7 @@ export default function EmployeeDetails() {
 
   return (
     <div className="space-y-4">
-      <button onClick={() => navigate('/employees')} className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
+      <button onClick={() => navigate('/employees')} className="text-sm text-teal-600 hover:text-teal-800 flex items-center gap-1">
         <svg className="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
@@ -53,7 +53,7 @@ export default function EmployeeDetails() {
       {/* Header */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-xl font-bold">
+          <div className="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 text-xl font-bold">
             {employee.full_name?.[0]}
           </div>
           <div>
@@ -121,7 +121,7 @@ function DocumentsSection({ employeeId }) {
       <h2 className="text-base font-semibold text-gray-800 mb-3">المستندات</h2>
       {loading ? (
         <div className="flex items-center justify-center py-8">
-          <div className="w-6 h-6 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-teal-200 border-t-teal-600 rounded-full animate-spin" />
         </div>
       ) : documents.length === 0 ? (
         <p className="text-sm text-gray-400 text-center py-4">لا توجد مستندات مرفقة</p>

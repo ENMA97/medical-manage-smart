@@ -95,7 +95,7 @@ export default function Dashboard() {
           <h2 className="text-base font-semibold text-gray-800 mb-3">التنبيهات</h2>
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="w-6 h-6 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+              <div className="w-6 h-6 border-3 border-teal-200 border-t-teal-600 rounded-full animate-spin" />
             </div>
           ) : alerts.length === 0 ? (
             <div className="text-center py-8 text-gray-400 text-sm">لا توجد تنبيهات حالياً</div>
@@ -105,7 +105,7 @@ export default function Dashboard() {
                 <div key={alert.id || i} className={`flex items-start gap-2 p-2.5 rounded-lg text-sm ${
                   alert.type === 'danger' ? 'bg-red-50 text-red-700' :
                   alert.type === 'warning' ? 'bg-amber-50 text-amber-700' :
-                  'bg-blue-50 text-blue-700'
+                  'bg-teal-50 text-teal-700'
                 }`}>
                   <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -134,7 +134,7 @@ export default function Dashboard() {
 
 function StatCard({ title, value, subtitle, icon, color, link }) {
   const colors = {
-    blue: 'bg-blue-50 text-blue-600',
+    blue: 'bg-teal-50 text-teal-600',
     green: 'bg-green-50 text-green-600',
     amber: 'bg-amber-50 text-amber-600',
     red: 'bg-red-50 text-red-600',
@@ -159,7 +159,7 @@ function StatCard({ title, value, subtitle, icon, color, link }) {
 
 function QuickAction({ to, label, color }) {
   const colors = {
-    blue: 'bg-blue-50 text-blue-700 hover:bg-blue-100',
+    blue: 'bg-teal-50 text-teal-700 hover:bg-teal-100',
     green: 'bg-green-50 text-green-700 hover:bg-green-100',
     purple: 'bg-purple-50 text-purple-700 hover:bg-purple-100',
     amber: 'bg-amber-50 text-amber-700 hover:bg-amber-100',

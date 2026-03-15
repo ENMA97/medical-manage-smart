@@ -33,7 +33,7 @@ export default class ErrorBoundary extends Component {
                 this.setState({ hasError: false, error: null });
                 window.location.href = '/';
               }}
-              className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              className="px-6 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors text-sm font-medium"
             >
               العودة للرئيسية
             </button>

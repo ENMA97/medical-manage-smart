@@ -225,12 +225,14 @@ export default function MainLayout() {
             {/* Logo + Desktop Nav */}
             <div className="flex items-center gap-4 sm:gap-6">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-blue-600 flex items-center justify-center">
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-teal-800 to-emerald-500 flex items-center justify-center">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <path d="M5 20 L12 4 L19 20" />
+                    <line x1="8" y1="14" x2="16" y2="14" />
+                    <path d="M8 8 L12 2 L16 8" />
                   </svg>
                 </div>
-                <span className="font-bold text-gray-800 text-base sm:text-lg">Medical ERP</span>
+                <span className="font-bold text-gray-800 text-base sm:text-lg">إنماء <span className="text-xs text-teal-600 tracking-wider">ENMA</span></span>
               </div>
 
               {/* Desktop Nav Links — hidden on mobile (bottom nav used instead) */}
@@ -243,7 +245,7 @@ export default function MainLayout() {
                     className={({ isActive }) =>
                       `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                         isActive
-                          ? 'bg-blue-50 text-blue-700'
+                          ? 'bg-teal-50 text-teal-700'
                           : 'text-gray-600 hover:bg-gray-100 hover:text-gray-800'
                       }`
                     }
@@ -277,7 +279,7 @@ export default function MainLayout() {
                   <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                     <span className="text-sm font-semibold text-gray-800">الإشعارات</span>
                     {unreadCount > 0 && (
-                      <button onClick={handleMarkAllRead} className="text-xs text-blue-600 hover:text-blue-800">
+                      <button onClick={handleMarkAllRead} className="text-xs text-teal-600 hover:text-teal-800">
                         تحديد الكل كمقروء
                       </button>
                     )}
@@ -290,7 +292,7 @@ export default function MainLayout() {
                         <button
                           key={n.id}
                           onClick={() => !n.read_at && handleMarkRead(n.id)}
-                          className={`w-full text-right px-4 py-3 hover:bg-gray-50 transition-colors ${!n.read_at ? 'bg-blue-50/50' : ''}`}
+                          className={`w-full text-right px-4 py-3 hover:bg-gray-50 transition-colors ${!n.read_at ? 'bg-teal-50/50' : ''}`}
                         >
                           <p className="text-sm text-gray-800 line-clamp-2">{n.title || n.message || 'إشعار جديد'}</p>
                           <p className="text-xs text-gray-400 mt-1">{n.created_at ? new Date(n.created_at).toLocaleDateString('ar-SA') : ''}</p>
@@ -308,7 +310,7 @@ export default function MainLayout() {
                 onClick={() => setMenuOpen(!menuOpen)}
                 className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors active:scale-95"
               >
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium text-sm">
+                <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 font-medium text-sm">
                   {user?.full_name?.[0] || 'U'}
                 </div>
                 <span className="hidden sm:block text-sm font-medium max-w-[120px] truncate">
@@ -359,7 +361,7 @@ export default function MainLayout() {
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-lg min-w-[64px] transition-colors ${
                   isActive
-                    ? 'text-blue-600'
+                    ? 'text-teal-600'
                     : 'text-gray-400 active:text-gray-600'
                 }`
               }

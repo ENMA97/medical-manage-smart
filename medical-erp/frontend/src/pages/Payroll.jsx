@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import payrollService from '../services/payrollService';
 
 const statusLabels = { draft: 'مسودة', approved: 'معتمد', paid: 'مدفوع' };
-const statusColors = { draft: 'bg-yellow-100 text-yellow-700', approved: 'bg-green-100 text-green-700', paid: 'bg-blue-100 text-blue-700' };
+const statusColors = { draft: 'bg-yellow-100 text-yellow-700', approved: 'bg-green-100 text-green-700', paid: 'bg-teal-100 text-teal-700' };
 
 export default function Payroll() {
   const navigate = useNavigate();
@@ -62,7 +62,7 @@ export default function Payroll() {
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>
+          <div className="flex items-center justify-center py-16"><div className="w-8 h-8 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin" /></div>
         ) : payrolls.length === 0 ? (
           <div className="text-center py-16 text-gray-500">لا يوجد مسيرات رواتب</div>
         ) : (
@@ -86,7 +86,7 @@ export default function Payroll() {
                   {p.status === 'draft' && (
                     <button onClick={(e) => handleApprove(e, p.id)} className="text-xs text-green-600 hover:text-green-800 font-medium">اعتماد</button>
                   )}
-                  <button onClick={(e) => handleExport(e, p.id)} className="text-xs text-blue-600 hover:text-blue-800 font-medium">تصدير</button>
+                  <button onClick={(e) => handleExport(e, p.id)} className="text-xs text-teal-600 hover:text-teal-800 font-medium">تصدير</button>
                 </div>
               </div>
             ))}
