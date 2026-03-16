@@ -1,9 +1,12 @@
 FROM php:8.4-fpm-bookworm
 
+# Install Node.js 22 (required by Vite 7+)
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    git curl zip unzip libpng-dev libjpeg-dev libfreetype6-dev \
-    libpq-dev libzip-dev nodejs npm \
+    git curl zip unzip nodejs libpng-dev libjpeg-dev libfreetype6-dev \
+    libpq-dev libzip-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_pgsql gd zip opcache bcmath pcntl \
     && pecl install redis \
@@ -15,7 +18,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copy composer files and run composer update (not install)
+# Copy composer files and run composer update
 COPY composer.json ./
 RUN composer update --no-scripts --no-interaction --optimize-autoloader --prefer-dist
 
@@ -29,9 +32,6 @@ RUN npm install && npm run build
 RUN mkdir -p storage/framework/{sessions,views,cache,testing} storage/logs bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
-
-# PHP config
-RUN echo "opcache.enable=1\nopcache.memory_consumption=128\nopcache.max_accelerated_files=10000" > /usr/local/etc/php/conf.d/opcache.ini
 
 EXPOSE 8080
 
