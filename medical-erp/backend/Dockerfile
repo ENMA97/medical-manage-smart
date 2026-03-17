@@ -1,6 +1,6 @@
-FROM php:8.4-fpm-bookworm
+FROM php:8.4-cli-bookworm
 
-# Install Node.js 22 (required by Vite 7+)
+# Install Node.js 22
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
 
 # Install system dependencies
@@ -18,21 +18,20 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copy composer files and run composer update
+# Install PHP dependencies
 COPY composer.json ./
 RUN composer update --no-scripts --no-interaction --optimize-autoloader --prefer-dist
 
-# Copy rest of application
+# Copy application
 COPY . .
 
-# Install npm and build assets
+# Build frontend assets
 RUN npm install && npm run build
 
 # Set permissions
 RUN mkdir -p storage/framework/{sessions,views,cache,testing} storage/logs bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache
+    && chmod -R 777 storage bootstrap/cache
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force && php-fpm"]
+CMD ["sh", "-c", "php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force --no-interaction && php artisan serve --host=0.0.0.0 --port=8080"]
