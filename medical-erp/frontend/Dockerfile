@@ -1,5 +1,5 @@
 # ── Development Stage ──
-FROM node:20-alpine AS development
+FROM node:22-alpine AS development
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ EXPOSE 3000
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
 
 # ── Build Stage ──
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 
 WORKDIR /app
 
@@ -32,19 +32,27 @@ FROM nginx:alpine AS production
 
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# SPA fallback - route all requests to index.html
-RUN echo 'server { \
-    listen 3000; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    location / { \
-        try_files $uri $uri/ /index.html; \
-    } \
-    location /assets { \
-        expires 1y; \
-        add_header Cache-Control "public, immutable"; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+# SPA fallback - use PORT env var (Railway sets it), default to 3000
+COPY <<'EOF' /docker-entrypoint.d/40-configure-port.sh
+#!/bin/sh
+PORT=${PORT:-3000}
+cat > /etc/nginx/conf.d/default.conf <<CONF
+server {
+    listen ${PORT};
+    root /usr/share/nginx/html;
+    index index.html;
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+    location /assets {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+CONF
+EOF
+
+RUN chmod +x /docker-entrypoint.d/40-configure-port.sh
 
 EXPOSE 3000
 
