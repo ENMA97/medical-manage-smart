@@ -68,6 +68,7 @@ export default defineConfig({
     },
     preview: {
           host: '0.0.0.0',
+            allowedHosts: 'all',
           port: parseInt(process.env.PORT) || 3000,
     },
 })
