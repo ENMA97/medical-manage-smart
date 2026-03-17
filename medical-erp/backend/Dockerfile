@@ -118,4 +118,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+# Startup: cache config, run migrations, then start services
+CMD ["sh", "-c", "php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force 2>&1 || true && /usr/bin/supervisord -c /etc/supervisord.conf"]
