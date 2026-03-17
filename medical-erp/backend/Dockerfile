@@ -56,9 +56,9 @@ FROM base AS production
 # Install nginx and supervisor
 RUN apk add --no-cache nginx supervisor
 
-# Nginx config for backend API
+# Nginx config template (PORT replaced at startup)
 RUN mkdir -p /run/nginx && echo 'server { \
-    listen 8000; \
+    listen __PORT__; \
     server_name _; \
     root /var/www/html/public; \
     index index.php; \
@@ -80,7 +80,7 @@ RUN mkdir -p /run/nginx && echo 'server { \
     location ~ /\.(?!well-known).* { \
         deny all; \
     } \
-}' > /etc/nginx/http.d/default.conf
+}' > /etc/nginx/http.d/default.conf.template
 
 # Supervisor config
 RUN echo '[supervisord]' > /etc/supervisord.conf \
@@ -112,11 +112,23 @@ RUN mkdir -p storage/logs storage/framework/{sessions,views,cache} bootstrap/cac
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
+# Startup script
+RUN echo '#!/bin/sh' > /start.sh \
+    && echo 'set -e' >> /start.sh \
+    && echo 'PORT=${PORT:-8000}' >> /start.sh \
+    && echo 'sed "s/__PORT__/$PORT/g" /etc/nginx/http.d/default.conf.template > /etc/nginx/http.d/default.conf' >> /start.sh \
+    && echo 'php artisan config:cache' >> /start.sh \
+    && echo 'php artisan route:cache' >> /start.sh \
+    && echo 'php artisan view:cache' >> /start.sh \
+    && echo 'php artisan migrate --force 2>&1 || true' >> /start.sh \
+    && echo 'php artisan db:seed --force 2>&1 || true' >> /start.sh \
+    && echo 'exec /usr/bin/supervisord -c /etc/supervisord.conf' >> /start.sh \
+    && chmod +x /start.sh
+
 EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Startup: cache config, run migrations, then start services
-CMD ["sh", "-c", "php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan migrate --force 2>&1 || true && /usr/bin/supervisord -c /etc/supervisord.conf"]
+CMD ["/start.sh"]
