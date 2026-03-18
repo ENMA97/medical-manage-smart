@@ -10,8 +10,9 @@ RUN apk add --no-cache \
     libzip-dev \
     icu-dev \
     oniguruma-dev \
+    sqlite-dev \
     curl \
-    && docker-php-ext-install pdo pdo_pgsql pgsql zip intl mbstring bcmath opcache \
+    && docker-php-ext-install pdo pdo_pgsql pgsql pdo_sqlite zip intl mbstring bcmath opcache \
     && pecl install redis && docker-php-ext-enable redis \
     && rm -rf /tmp/pear
 
@@ -113,17 +114,41 @@ RUN mkdir -p storage/logs storage/framework/{sessions,views,cache} bootstrap/cac
     && chmod -R 775 storage bootstrap/cache
 
 # Startup script
-RUN echo '#!/bin/sh' > /start.sh \
-    && echo 'set -e' >> /start.sh \
-    && echo 'PORT=${PORT:-8000}' >> /start.sh \
-    && echo 'sed "s/__PORT__/$PORT/g" /etc/nginx/http.d/default.conf.template > /etc/nginx/http.d/default.conf' >> /start.sh \
-    && echo 'php artisan config:cache' >> /start.sh \
-    && echo 'php artisan route:cache' >> /start.sh \
-    && echo 'php artisan view:cache' >> /start.sh \
-    && echo 'php artisan migrate --force 2>&1 || true' >> /start.sh \
-    && echo 'php artisan db:seed --force 2>&1 || true' >> /start.sh \
-    && echo 'exec /usr/bin/supervisord -c /etc/supervisord.conf' >> /start.sh \
-    && chmod +x /start.sh
+COPY <<'STARTSCRIPT' /start.sh
+#!/bin/sh
+set -e
+
+# Dynamic PORT for Railway
+PORT=${PORT:-8000}
+sed "s/__PORT__/$PORT/g" /etc/nginx/http.d/default.conf.template > /etc/nginx/http.d/default.conf
+
+# Ensure .env exists (Railway passes env vars, but Laravel needs the file for artisan)
+if [ ! -f /var/www/html/.env ]; then
+    echo "APP_NAME=\"Medical ERP\"" > /var/www/html/.env
+    echo "APP_ENV=${APP_ENV:-production}" >> /var/www/html/.env
+    echo "APP_DEBUG=${APP_DEBUG:-false}" >> /var/www/html/.env
+    echo "APP_URL=${APP_URL:-http://localhost}" >> /var/www/html/.env
+    echo "DB_CONNECTION=${DB_CONNECTION:-sqlite}" >> /var/www/html/.env
+    echo "CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-*}" >> /var/www/html/.env
+fi
+
+# Generate APP_KEY if not set
+if [ -z "$APP_KEY" ]; then
+    php artisan key:generate --force 2>&1
+fi
+
+# Ensure SQLite database file exists
+touch /var/www/html/database/database.sqlite 2>/dev/null || true
+
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan migrate --force 2>&1 || true
+php artisan db:seed --force 2>&1 || true
+
+exec /usr/bin/supervisord -c /etc/supervisord.conf
+STARTSCRIPT
+RUN chmod +x /start.sh
 
 EXPOSE 8000
 
