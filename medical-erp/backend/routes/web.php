@@ -22,15 +22,6 @@ Route::get('/health', function () {
         $checks['status'] = 'degraded';
     }
 
-    // Redis
-    try {
-        \Illuminate\Support\Facades\Cache::store('redis')->put('health_check', true, 10);
-        $checks['services']['redis'] = 'ok';
-    } catch (\Exception $e) {
-        $checks['services']['redis'] = 'error';
-        $checks['status'] = 'degraded';
-    }
-
     $httpStatus = $checks['status'] === 'ok' ? 200 : 503;
     return response()->json($checks, $httpStatus);
 });

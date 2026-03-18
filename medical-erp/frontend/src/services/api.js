@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-// Production: use full API URL; Development: use Vite proxy
+// Use VITE_API_URL if explicitly set, otherwise use relative /api path
+// In production, nginx proxies /api to the backend service
 const baseURL = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({

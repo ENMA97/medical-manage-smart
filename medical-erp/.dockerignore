@@ -1,0 +1,39 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docs
+*.md
+docs/
+ACTIVATION_PLAN.md
+
+# Old directories
+backend-old/
+frontend-old/
+
+# Docker compose files
+docker/
+docker-compose*.yml
+deploy.sh
+
+# Backend dev files
+backend/.env
+backend/.env.backup
+backend/.env.production
+backend/vendor/
+backend/node_modules/
+backend/tests/
+backend/phpunit.xml
+backend/.phpunit.result.cache
+backend/.phpunit.cache/
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/bootstrap/cache/*.php
+
+# Frontend dev files
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
