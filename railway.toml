@@ -1,0 +1,8 @@
+[build]
+dockerfilePath = "medical-erp/Dockerfile"
+dockerContext = "medical-erp"
+
+[deploy]
+healthcheckPath = "/health"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
