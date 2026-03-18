@@ -16,7 +16,56 @@
 
 ---
 
-## الطريقة الأولى: التشغيل بـ Docker (الأسهل والأسرع)
+## الطريقة الأولى: التثبيت التلقائي بسكربت (الأسهل)
+
+### المتطلبات
+
+1. **Git** — [تحميل Git](https://git-scm.com/downloads)
+2. **Node.js 20+** — [تحميل Node.js](https://nodejs.org/) (اختر LTS)
+3. **PHP 8.2+** + **Composer** — عبر [Laragon](https://laragon.org/) (يثبّت الكل دفعة واحدة)
+
+### خطوات التثبيت
+
+```bash
+git clone https://github.com/ENMA97/medical-manage-smart.git
+cd medical-manage-smart
+```
+
+**Windows:**
+```bash
+setup-windows.bat
+```
+
+**Linux / macOS:**
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
+السكربت يقوم تلقائياً بـ:
+- تثبيت مكتبات PHP و Node.js
+- إنشاء ملفات `.env`
+- توليد مفتاح التطبيق
+- إنشاء قاعدة بيانات SQLite
+- تشغيل الهجرات وإدخال البيانات التجريبية
+
+بعد الانتهاء، شغّل في **نافذتين CMD منفصلتين**:
+
+```bash
+# النافذة 1: الباكند
+cd medical-erp/backend
+php artisan serve
+
+# النافذة 2: الفرونتند
+cd medical-erp/frontend
+npm run dev
+```
+
+ثم افتح: **http://localhost:3000**
+
+---
+
+## الطريقة الثانية: التشغيل بـ Docker
 
 ### المتطلبات
 
@@ -118,7 +167,7 @@ docker-compose up -d --build
 
 ---
 
-## الطريقة الثانية: التشغيل المحلي (بدون Docker)
+## الطريقة الثالثة: التشغيل المحلي يدوياً (بدون Docker)
 
 ### المتطلبات
 
@@ -204,12 +253,23 @@ php artisan key:generate
 عدّل `.env`:
 ```env
 DB_CONNECTION=sqlite
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=laravel
+# DB_USERNAME=root
+# DB_PASSWORD=
+
+SESSION_DRIVER=file
+CACHE_STORE=file
+QUEUE_CONNECTION=sync
 ```
+
+> **مهم:** عند استخدام SQLite، يجب تغيير `SESSION_DRIVER` و `CACHE_STORE` إلى `file` و `QUEUE_CONNECTION` إلى `sync`
 
 أنشئ ملف قاعدة البيانات:
 ```bash
 # في Windows CMD:
-type nul > database/database.sqlite
+type nul > database\database.sqlite
 
 # في PowerShell:
 New-Item database/database.sqlite -ItemType File
@@ -268,6 +328,19 @@ http://localhost:3000
 http://localhost:8000/api
 ```
 يجب أن ترجع استجابة JSON.
+
+### حسابات الاختبار
+
+بعد تشغيل `php artisan migrate --seed`، تتوفر الحسابات التالية:
+
+| الدور | الرقم الوظيفي | رقم الهاتف |
+|-------|--------------|------------|
+| **مدير عام** (Super Admin) | 1001 | 0512345001 |
+| **مدير موارد بشرية** (HR Manager) | 1002 | 0512345002 |
+| **طبيب** (Doctor) | 2001 | 0512345003 |
+| **ممرض** (Nurse) | 3001 | 0512345004 |
+
+> سجّل الدخول باستخدام **الرقم الوظيفي** و **رقم الهاتف** فقط (بدون كلمة مرور)
 
 ---
 

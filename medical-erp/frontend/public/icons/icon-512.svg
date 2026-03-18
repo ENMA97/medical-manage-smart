@@ -1,21 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="80" fill="#2563EB"/>
-  <g transform="translate(128, 80)" fill="none" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Building -->
-    <rect x="32" y="40" width="192" height="280" rx="8" fill="none"/>
-    <line x1="128" y1="0" x2="128" y2="40"/>
-    <line x1="108" y1="0" x2="148" y2="0"/>
-    <!-- Windows -->
-    <rect x="64" y="72" width="32" height="32" rx="4"/>
-    <rect x="160" y="72" width="32" height="32" rx="4"/>
-    <rect x="64" y="136" width="32" height="32" rx="4"/>
-    <rect x="160" y="136" width="32" height="32" rx="4"/>
-    <rect x="64" y="200" width="32" height="32" rx="4"/>
-    <rect x="160" y="200" width="32" height="32" rx="4"/>
-    <!-- Door -->
-    <rect x="100" y="264" width="56" height="56" rx="4"/>
-    <!-- Medical Cross -->
-    <line x1="128" y1="272" x2="128" y2="312"/>
-    <line x1="108" y1="292" x2="148" y2="292"/>
+  <defs>
+    <linearGradient id="enmaGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#115E59"/>
+      <stop offset="100%" stop-color="#10B981"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="80" fill="url(#enmaGrad)"/>
+  <!-- ENMA Logomark: Stylized "A" with upward arrow -->
+  <g transform="translate(256, 256)">
+    <!-- Letter A base -->
+    <path d="M-75 85 L0 -75 L75 85" fill="none" stroke="white" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- A crossbar -->
+    <line x1="-42" y1="30" x2="42" y2="30" stroke="white" stroke-width="18" stroke-linecap="round"/>
+    <!-- Upward arrow tip extending from A peak -->
+    <path d="M-38 -42 L0 -96 L38 -42" fill="none" stroke="white" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 </svg>

@@ -31,17 +31,20 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4" dir="rtl">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-emerald-100 px-4" dir="rtl">
       <div className="w-full max-w-md">
         {/* Logo / Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-600 mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-800 to-emerald-500 mb-4">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <path d="M5 20 L12 4 L19 20" />
+              <line x1="8" y1="14" x2="16" y2="14" />
+              <path d="M8 8 L12 2 L16 8" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-800">نظام إدارة الموارد البشرية</h1>
-          <p className="text-gray-500 mt-2">المنشأة الطبية الذكية</p>
+          <h1 className="text-2xl font-bold text-gray-800">إنماء</h1>
+          <p className="text-sm font-semibold text-teal-700 tracking-widest mb-1">ENMA</p>
+          <p className="text-gray-500 mt-1">نظام إدارة الموارد البشرية</p>
         </div>
 
         {/* Login Card */}
@@ -68,7 +71,7 @@ export default function Login() {
                   onChange={(e) => setEmployeeNumber(e.target.value)}
                   placeholder="أدخل الرقم الوظيفي"
                   required
-                  className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-700 placeholder-gray-400"
+                  className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-gray-700 placeholder-gray-400"
                 />
               </div>
             </div>
@@ -93,7 +96,7 @@ export default function Login() {
                   placeholder="05XXXXXXXX"
                   required
                   dir="ltr"
-                  className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-700 placeholder-gray-400 text-left"
+                  className="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-gray-700 placeholder-gray-400 text-left"
                 />
               </div>
             </div>
@@ -102,7 +105,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-xl transition-colors duration-200 flex items-center justify-center gap-2"
+              className="w-full py-3 px-4 bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 text-white font-medium rounded-xl transition-colors duration-200 flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <>
@@ -143,7 +146,7 @@ export default function Login() {
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-6">
-          Medical ERP Smart &copy; {new Date().getFullYear()}
+          ENMA &copy; {new Date().getFullYear()}
         </p>
       </div>
     </div>

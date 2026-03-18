@@ -268,10 +268,146 @@ return new class extends Migration
             $table->index(['employee_id', 'letter_type']);
             $table->index('status');
         });
+
+        // ─────────────────────────────────────────────
+        // 6. إدارة العهد (Custody Management)
+        // تتبع الأصول والعهد المسلمة للموظفين
+        // ─────────────────────────────────────────────
+        Schema::create('custody_management', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('employee_id');
+            $table->string('item_name');                              // اسم العهدة
+            $table->string('item_name_ar')->nullable();               // اسم العهدة بالعربي
+            $table->enum('item_type', [
+                'laptop',          // لابتوب
+                'mobile',          // جوال
+                'vehicle',         // سيارة
+                'key',             // مفتاح
+                'card',            // بطاقة
+                'uniform',         // زي رسمي
+                'equipment',       // معدات
+                'furniture',       // أثاث
+                'other'            // أخرى
+            ]);
+            $table->string('serial_number')->nullable();              // الرقم التسلسلي
+            $table->string('asset_tag')->nullable();                  // رقم الأصل
+            $table->text('description')->nullable();                  // الوصف
+            $table->decimal('value', 12, 2)->nullable();              // القيمة
+            $table->enum('condition_on_delivery', [
+                'new', 'good', 'fair', 'poor'
+            ])->default('new');
+            $table->enum('condition_on_return', [
+                'new', 'good', 'fair', 'poor', 'damaged', 'lost'
+            ])->nullable();
+            $table->date('delivery_date');                            // تاريخ التسليم
+            $table->date('expected_return_date')->nullable();         // تاريخ الإرجاع المتوقع
+            $table->date('actual_return_date')->nullable();           // تاريخ الإرجاع الفعلي
+            $table->enum('status', [
+                'delivered',       // مسلّمة
+                'in_use',          // قيد الاستخدام
+                'returned',        // مُرجعة
+                'damaged',         // تالفة
+                'lost',            // مفقودة
+                'written_off'      // مشطوبة
+            ])->default('delivered');
+            $table->uuid('delivered_by')->nullable();                 // سلّمها
+            $table->uuid('received_by')->nullable();                  // استلمها عند الإرجاع
+            $table->text('notes')->nullable();
+            $table->string('delivery_document')->nullable();          // مستند التسليم
+            $table->string('return_document')->nullable();            // مستند الإرجاع
+            $table->timestamps();
+            $table->softDeletes();
+
+            $table->foreign('employee_id')->references('id')->on('employees')->cascadeOnDelete();
+            $table->foreign('delivered_by')->references('id')->on('users');
+            $table->foreign('received_by')->references('id')->on('users');
+
+            $table->index(['employee_id', 'status']);
+            $table->index('status');
+        });
+
+        // ─────────────────────────────────────────────
+        // 7. الاستقالات (Resignations)
+        // إدارة طلبات الاستقالة وإنهاء الخدمة
+        // ─────────────────────────────────────────────
+        Schema::create('resignations', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->uuid('employee_id');
+            $table->uuid('contract_id')->nullable();                  // العقد المرتبط
+            $table->enum('type', [
+                'resignation',         // استقالة
+                'termination',         // إنهاء خدمة
+                'end_of_contract',     // انتهاء عقد
+                'retirement',          // تقاعد
+                'death',               // وفاة
+                'mutual_agreement'     // اتفاق متبادل
+            ]);
+            $table->date('request_date');                             // تاريخ الطلب
+            $table->date('last_working_day')->nullable();             // آخر يوم عمل
+            $table->date('effective_date')->nullable();               // تاريخ السريان
+            $table->integer('notice_period_days')->default(0);        // فترة الإشعار
+            $table->text('reason')->nullable();                       // السبب
+            $table->text('reason_ar')->nullable();                    // السبب بالعربي
+            $table->enum('status', [
+                'draft',               // مسودة
+                'submitted',           // مقدمة
+                'under_review',        // قيد المراجعة
+                'approved',            // معتمدة
+                'rejected',            // مرفوضة
+                'withdrawn',           // مسحوبة
+                'completed',           // مكتملة (تم إخلاء الطرف)
+                'cancelled'            // ملغاة
+            ])->default('draft');
+
+            // الموافقات
+            $table->uuid('direct_manager_id')->nullable();
+            $table->enum('manager_decision', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->timestamp('manager_decision_at')->nullable();
+            $table->text('manager_remarks')->nullable();
+
+            $table->uuid('hr_reviewer_id')->nullable();
+            $table->enum('hr_decision', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->timestamp('hr_decision_at')->nullable();
+            $table->text('hr_remarks')->nullable();
+
+            $table->uuid('final_approver_id')->nullable();
+            $table->enum('final_decision', ['pending', 'approved', 'rejected'])->default('pending');
+            $table->timestamp('final_decision_at')->nullable();
+            $table->text('final_remarks')->nullable();
+
+            // إخلاء الطرف
+            $table->boolean('custody_cleared')->default(false);       // تم تسليم العهد
+            $table->boolean('financial_cleared')->default(false);     // تم التسوية المالية
+            $table->boolean('it_cleared')->default(false);            // تم إلغاء الحسابات
+            $table->boolean('admin_cleared')->default(false);         // تم إخلاء الطرف الإداري
+            $table->date('clearance_completed_at')->nullable();
+
+            // مستحقات نهاية الخدمة
+            $table->uuid('end_of_service_id')->nullable();            // ربط بحساب نهاية الخدمة
+
+            $table->text('notes')->nullable();
+            $table->string('attachment')->nullable();                  // مرفق
+            $table->uuid('created_by');
+            $table->timestamps();
+            $table->softDeletes();
+
+            $table->foreign('employee_id')->references('id')->on('employees')->cascadeOnDelete();
+            $table->foreign('contract_id')->references('id')->on('contracts')->nullOnDelete();
+            $table->foreign('direct_manager_id')->references('id')->on('users');
+            $table->foreign('hr_reviewer_id')->references('id')->on('users');
+            $table->foreign('final_approver_id')->references('id')->on('users');
+            $table->foreign('created_by')->references('id')->on('users');
+
+            $table->index(['employee_id', 'status']);
+            $table->index('status');
+            $table->index('type');
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('resignations');
+        Schema::dropIfExists('custody_management');
         Schema::dropIfExists('generated_letters');
         Schema::dropIfExists('letter_templates');
         Schema::dropIfExists('contract_renewals');

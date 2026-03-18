@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Model
 {
-    use HasFactory, HasUuid, SoftDeletes;
+    use Auditable, HasFactory, HasUuid, SoftDeletes;
 
     protected $keyType = 'string';
     public $incrementing = false;
@@ -103,6 +104,51 @@ class Employee extends Model
     public function subordinates(): HasMany
     {
         return $this->hasMany(Employee::class, 'direct_manager_id');
+    }
+
+    public function contracts(): HasMany
+    {
+        return $this->hasMany(Contract::class);
+    }
+
+    public function leaveRequests(): HasMany
+    {
+        return $this->hasMany(LeaveRequest::class);
+    }
+
+    public function leaveBalances(): HasMany
+    {
+        return $this->hasMany(LeaveBalance::class);
+    }
+
+    public function loans(): HasMany
+    {
+        return $this->hasMany(EmployeeLoan::class);
+    }
+
+    public function custodyItems(): HasMany
+    {
+        return $this->hasMany(CustodyItem::class);
+    }
+
+    public function resignations(): HasMany
+    {
+        return $this->hasMany(Resignation::class);
+    }
+
+    public function generatedLetters(): HasMany
+    {
+        return $this->hasMany(GeneratedLetter::class);
+    }
+
+    public function violations(): HasMany
+    {
+        return $this->hasMany(Violation::class);
+    }
+
+    public function payrollItems(): HasMany
+    {
+        return $this->hasMany(PayrollItem::class);
     }
 
     // ─── Scopes ───
