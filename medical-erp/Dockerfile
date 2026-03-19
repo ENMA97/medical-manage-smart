@@ -6,16 +6,16 @@
 # ── Stage 1: Build Frontend ──
 FROM node:22-alpine AS frontend-build
 WORKDIR /app
-COPY frontend/package.json frontend/package-lock.json* ./
+COPY medical-erp/frontend/package.json medical-erp/frontend/package-lock.json* ./
 RUN npm ci
-COPY frontend/ .
+COPY medical-erp/frontend/ .
 ENV VITE_API_URL=
 RUN npm run build
 
 # ── Stage 2: Install PHP Dependencies ──
 FROM composer:2 AS composer-deps
 WORKDIR /app
-COPY backend/composer.json ./
+COPY medical-erp/backend/composer.json ./
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --ignore-platform-reqs
 
 # ── Stage 3: Production ──
@@ -90,7 +90,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY --from=composer-deps /app/vendor /var/www/html/vendor
 
 # Copy backend application code
-COPY backend/ .
+COPY medical-erp/backend/ .
 
 # Copy frontend build output
 COPY --from=frontend-build /app/dist /var/www/html/public/app
