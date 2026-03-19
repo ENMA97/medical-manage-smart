@@ -61,9 +61,28 @@ export default defineConfig({
                   },
           }),
         ],
-    preview: {
-          host: '0.0.0.0',
-          port: parseInt(process.env.PORT) || 3000,
-          allowedHosts: true,
-    },
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https?:\/\/.*\/api\/.*/i,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60,
+              },
+            },
+          },
+        ],
+      },
+    }),
+  ],
+  preview: {
+    host: '0.0.0.0',
+    port: parseInt(process.env.PORT) || 3000,
+    allowedHosts: true,
+  },
 })

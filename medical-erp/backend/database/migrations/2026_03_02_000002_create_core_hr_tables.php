@@ -30,7 +30,7 @@ return new class extends Migration
             // البيانات الوظيفية
             $table->string('employee_number')->unique();              // الرقم الوظيفي (تلقائي)
             $table->uuid('department_id');                             // القسم
-            $table->uuid('position_id');                               // المسمى الوظيفي
+            $table->uuid('position_id')->nullable();                    // المسمى الوظيفي
             $table->uuid('direct_manager_id')->nullable();            // المشرف المباشر
             $table->date('hire_date');                                  // تاريخ الالتحاق
             $table->date('actual_start_date')->nullable();            // تاريخ المباشرة الفعلي
