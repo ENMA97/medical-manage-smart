@@ -1,0 +1,38 @@
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docs
+*.md
+
+# Old directories
+medical-erp/backend-old/
+medical-erp/frontend-old/
+medical-erp/docs/
+
+# Docker compose files
+medical-erp/docker/
+medical-erp/docker-compose*.yml
+medical-erp/deploy.sh
+
+# Backend dev files
+medical-erp/backend/.env
+medical-erp/backend/.env.backup
+medical-erp/backend/.env.production
+medical-erp/backend/vendor/
+medical-erp/backend/node_modules/
+medical-erp/backend/tests/
+medical-erp/backend/phpunit.xml
+medical-erp/backend/.phpunit.result.cache
+medical-erp/backend/.phpunit.cache/
+medical-erp/backend/storage/logs/*
+medical-erp/backend/storage/framework/cache/*
+medical-erp/backend/storage/framework/sessions/*
+medical-erp/backend/storage/framework/views/*
+medical-erp/backend/bootstrap/cache/*.php
+
+# Frontend dev files
+medical-erp/frontend/node_modules/
+medical-erp/frontend/dist/
+medical-erp/frontend/.env.local
