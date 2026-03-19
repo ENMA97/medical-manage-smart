@@ -53,12 +53,17 @@ export default defineConfig({
               cacheName: 'api-cache',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60, // 1 hour
+                maxAgeSeconds: 60 * 60,
               },
+            },
+          },
+        ],
       },
-      preview: {
-              host: '0.0.0.0',
-              port: parseInt(process.env.PORT) || 3000,
-              allowedHosts: true,
-      },
+    }),
+  ],
+  preview: {
+    host: '0.0.0.0',
+    port: parseInt(process.env.PORT) || 3000,
+    allowedHosts: true,
+  },
 })
