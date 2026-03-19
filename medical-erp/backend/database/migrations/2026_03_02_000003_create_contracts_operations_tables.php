@@ -73,7 +73,7 @@ return new class extends Migration
             $table->string('contract_file')->nullable();               // ملف العقد المرفوع
 
             // الموافقات
-            $table->uuid('created_by');
+            $table->uuid('created_by')->nullable();
             $table->uuid('approved_by')->nullable();
             $table->timestamp('approved_at')->nullable();
 
@@ -222,7 +222,7 @@ return new class extends Migration
             $table->json('default_settings')->nullable();       // إعدادات افتراضية (حجم خط، هوامش...)
             $table->boolean('requires_approval')->default(false); // يتطلب موافقة
             $table->boolean('is_active')->default(true);
-            $table->uuid('created_by');
+            $table->uuid('created_by')->nullable();
             $table->timestamps();
 
             $table->foreign('created_by')->references('id')->on('users');
@@ -387,7 +387,7 @@ return new class extends Migration
 
             $table->text('notes')->nullable();
             $table->string('attachment')->nullable();                  // مرفق
-            $table->uuid('created_by');
+            $table->uuid('created_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
