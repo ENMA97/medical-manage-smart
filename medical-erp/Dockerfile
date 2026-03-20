@@ -6,7 +6,7 @@
 # ── Stage 1: Build Frontend ──
 FROM node:22-alpine AS frontend-build
 WORKDIR /app
-COPY medical-erp/frontend/package.json medical-erp/frontend/package-lock.json* ./
+COPY medical-erp/frontend/package.json medical-erp/frontend/package-lock.json ./
 RUN npm ci
 COPY medical-erp/frontend/ .
 ENV VITE_API_URL=
@@ -15,11 +15,13 @@ RUN npm run build
 # ── Stage 2: Install PHP Dependencies ──
 FROM composer:2 AS composer-deps
 WORKDIR /app
-COPY medical-erp/backend/composer.json ./
+COPY medical-erp/backend/composer.json medical-erp/backend/composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --ignore-platform-reqs
 
 # ── Stage 3: Production ──
 FROM php:8.4-fpm-alpine AS production
+
+ENV PORT=8000
 
 # System dependencies + PHP extensions
 RUN apk add --no-cache \
@@ -104,7 +106,7 @@ RUN mkdir -p /run/nginx storage/logs storage/framework/{sessions,views,cache} bo
     && chown -R www-data:www-data storage bootstrap/cache database \
     && chmod -R 775 storage bootstrap/cache database
 
-# Inline startup script using shell heredoc (avoids COPY file-not-found issues)
+# Inline startup script
 RUN cat <<'ENDOFSCRIPT' > /start.sh
 #!/bin/sh
 
