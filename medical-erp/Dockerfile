@@ -4,7 +4,7 @@
 # ══════════════════════════════════════════════════════════
 
 # ── Stage 1: Build Frontend ──
-FROM node:22-alpine AS frontend-build
+FROM node:22-alpine AS frontend-buildh
 WORKDIR /app
 COPY medical-erp/frontend/package.json medical-erp/frontend/package-lock.json* ./
 RUN npm ci
@@ -19,7 +19,7 @@ COPY medical-erp/backend/composer.json ./
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --ignore-platform-reqs
 
 # ── Stage 3: Production ──
-FROM php:8.3-fpm-alpine AS production
+FROM php:8.4-fpm-alpine AS production
 
 # System dependencies + PHP extensions
 RUN apk add --no-cache \
