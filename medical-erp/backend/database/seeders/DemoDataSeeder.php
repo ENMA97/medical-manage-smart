@@ -35,54 +35,39 @@ class DemoDataSeeder extends Seeder
             return;
         }
 
-        // ─── 1. أنواع الإجازات ───
-        $this->command->info('📅 إنشاء أنواع الإجازات...');
-        $leaveTypes = $this->seedLeaveTypes();
+        $steps = [
+            ['📅 إنشاء أنواع الإجازات...', fn () => $this->seedLeaveTypes()],
+            ['📄 إنشاء العقود...', fn () => $this->seedContracts($employees)],
+            ['📊 إنشاء أرصدة الإجازات...', fn () => $this->seedLeaveBalances($employees, LeaveType::all()->values()->all())],
+            ['🏖️  إنشاء طلبات الإجازات...', fn () => $this->seedLeaveRequests($employees, LeaveType::all()->values()->all())],
+            ['📝 إنشاء قوالب الخطابات...', fn () => $this->seedLetterTemplates()],
+            ['📦 إنشاء بيانات العهد...', fn () => $this->seedCustody($employees)],
+            ['⚙️  إنشاء إعدادات النظام...', fn () => $this->seedSettings()],
+            ['💰 إنشاء بيانات القروض...', fn () => $this->seedLoans($employees)],
+            ['💵 إنشاء بيانات الرواتب...', fn () => $this->seedPayroll($employees)],
+            ['📬 إنشاء خطابات تجريبية...', fn () => $this->seedGeneratedLetters($employees)],
+            ['🔔 إنشاء إشعارات تجريبية...', fn () => $this->seedNotifications()],
+        ];
 
-        // ─── 2. العقود ───
-        $this->command->info('📄 إنشاء العقود...');
-        $this->seedContracts($employees);
-
-        // ─── 3. أرصدة الإجازات ───
-        $this->command->info('📊 إنشاء أرصدة الإجازات...');
-        $this->seedLeaveBalances($employees, $leaveTypes);
-
-        // ─── 4. طلبات الإجازات ───
-        $this->command->info('🏖️  إنشاء طلبات الإجازات...');
-        $this->seedLeaveRequests($employees, $leaveTypes);
-
-        // ─── 5. قوالب الخطابات ───
-        $this->command->info('📝 إنشاء قوالب الخطابات...');
-        $this->seedLetterTemplates();
-
-        // ─── 6. العهد ───
-        $this->command->info('📦 إنشاء بيانات العهد...');
-        $this->seedCustody($employees);
-
-        // ─── 7. إعدادات النظام ───
-        $this->command->info('⚙️  إنشاء إعدادات النظام...');
-        $this->seedSettings();
-
-        // ─── 8. القروض ───
-        $this->command->info('💰 إنشاء بيانات القروض...');
-        $this->seedLoans($employees);
-
-        // ─── 9. الرواتب ───
-        $this->command->info('💵 إنشاء بيانات الرواتب...');
-        $this->seedPayroll($employees);
-
-        // ─── 10. الخطابات المُولّدة ───
-        $this->command->info('📬 إنشاء خطابات تجريبية...');
-        $this->seedGeneratedLetters($employees);
-
-        // ─── 11. الإشعارات ───
-        $this->command->info('🔔 إنشاء إشعارات تجريبية...');
-        $this->seedNotifications();
+        $errors = 0;
+        foreach ($steps as [$label, $callback]) {
+            $this->command->info($label);
+            try {
+                $callback();
+            } catch (\Throwable $e) {
+                $errors++;
+                $this->command->warn("   ⚠️  {$e->getMessage()}");
+            }
+        }
 
         $this->command->info('');
-        $this->command->info('╔══════════════════════════════════════════════╗');
-        $this->command->info('║    ✅ Demo data seeded successfully!         ║');
-        $this->command->info('╚══════════════════════════════════════════════╝');
+        if ($errors === 0) {
+            $this->command->info('╔══════════════════════════════════════════════╗');
+            $this->command->info('║    ✅ Demo data seeded successfully!         ║');
+            $this->command->info('╚══════════════════════════════════════════════╝');
+        } else {
+            $this->command->warn("⚠️  Demo data seeded with {$errors} warning(s)");
+        }
     }
 
     private function seedLeaveTypes(): array
@@ -92,8 +77,8 @@ class DemoDataSeeder extends Seeder
             ['code' => 'SICK', 'name' => 'Sick Leave', 'name_ar' => 'إجازة مرضية', 'category' => 'sick', 'default_days_per_year' => 30, 'is_paid' => true, 'pay_percentage' => 100, 'requires_attachment' => true],
             ['code' => 'UNPAID', 'name' => 'Unpaid Leave', 'name_ar' => 'إجازة بدون راتب', 'category' => 'unpaid', 'default_days_per_year' => 15, 'is_paid' => false, 'pay_percentage' => 0],
             ['code' => 'MATERNITY', 'name' => 'Maternity Leave', 'name_ar' => 'إجازة أمومة', 'category' => 'maternity', 'default_days_per_year' => 70, 'is_paid' => true, 'pay_percentage' => 100],
-            ['code' => 'MARRIAGE', 'name' => 'Marriage Leave', 'name_ar' => 'إجازة زواج', 'category' => 'special', 'default_days_per_year' => 5, 'is_paid' => true, 'pay_percentage' => 100],
-            ['code' => 'BEREAVEMENT', 'name' => 'Bereavement Leave', 'name_ar' => 'إجازة وفاة', 'category' => 'special', 'default_days_per_year' => 5, 'is_paid' => true, 'pay_percentage' => 100],
+            ['code' => 'MARRIAGE', 'name' => 'Marriage Leave', 'name_ar' => 'إجازة زواج', 'category' => 'marriage', 'default_days_per_year' => 5, 'is_paid' => true, 'pay_percentage' => 100],
+            ['code' => 'BEREAVEMENT', 'name' => 'Bereavement Leave', 'name_ar' => 'إجازة وفاة', 'category' => 'bereavement', 'default_days_per_year' => 5, 'is_paid' => true, 'pay_percentage' => 100],
         ];
 
         $created = [];
@@ -227,7 +212,6 @@ class DemoDataSeeder extends Seeder
                 array_merge($t, [
                     'id' => Str::uuid(),
                     'is_active' => true,
-                    'sort_order' => $i + 1,
                 ])
             );
         }
