@@ -4,7 +4,7 @@
 # ══════════════════════════════════════════════════════════
 
 # ── Stage 1: Build Frontend ──
-FROM node:22-alpine AS frontend-buildh
+FROM node:22-alpine AS frontend-build
 WORKDIR /app
 COPY medical-erp/frontend/package.json medical-erp/frontend/package-lock.json* ./
 RUN npm ci
