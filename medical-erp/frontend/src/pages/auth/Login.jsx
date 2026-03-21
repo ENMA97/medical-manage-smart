@@ -19,11 +19,18 @@ export default function Login() {
       toast.success(data.message || 'تم تسجيل الدخول بنجاح');
       navigate('/', { replace: true });
     } catch (error) {
-      const msg =
-        error.response?.data?.message ||
-        error.response?.data?.errors?.employee_number?.[0] ||
-        error.response?.data?.errors?.phone?.[0] ||
-        'حدث خطأ أثناء تسجيل الدخول';
+      let msg;
+      if (error.response) {
+        msg =
+          error.response.data?.message ||
+          error.response.data?.errors?.employee_number?.[0] ||
+          error.response.data?.errors?.phone?.[0] ||
+          `خطأ من الخادم (${error.response.status})`;
+      } else if (error.request) {
+        msg = 'لا يمكن الاتصال بالخادم. تحقق من اتصال الإنترنت.';
+      } else {
+        msg = 'حدث خطأ أثناء تسجيل الدخول';
+      }
       toast.error(msg);
     } finally {
       setSubmitting(false);
