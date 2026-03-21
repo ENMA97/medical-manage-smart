@@ -2,7 +2,13 @@ import axios from 'axios';
 
 // Use VITE_API_URL if explicitly set, otherwise use relative /api path
 // In production, nginx proxies /api to the backend service
-const baseURL = import.meta.env.VITE_API_URL || '/api';
+// Ensures /api suffix is always present regardless of how the env var is set
+const rawUrl = import.meta.env.VITE_API_URL;
+const baseURL = rawUrl
+  ? (rawUrl.replace(/\/+$/, '').endsWith('/api')
+    ? rawUrl.replace(/\/+$/, '')
+    : `${rawUrl.replace(/\/+$/, '')}/api`)
+  : '/api';
 
 const api = axios.create({
   baseURL,
