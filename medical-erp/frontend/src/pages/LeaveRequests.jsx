@@ -109,7 +109,7 @@ export default function LeaveRequests() {
               <div key={req.id} className="px-4 py-3 hover:bg-gray-50">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-gray-800 text-sm">{req.employee?.full_name || 'أنا'}</p>
+                    <p className="font-medium text-gray-800 text-sm">{req.employee?.full_name_ar || req.employee?.full_name_en || 'أنا'}</p>
                     <p className="text-xs text-gray-500 mt-0.5">{req.leave_type?.name_ar} — {req.start_date} إلى {req.end_date}</p>
                     {req.reason && <p className="text-xs text-gray-400 mt-0.5">{req.reason}</p>}
                   </div>

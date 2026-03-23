@@ -54,10 +54,10 @@ export default function EmployeeDetails() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center text-teal-600 text-xl font-bold">
-            {employee.full_name?.[0]}
+            {(employee.full_name_ar || employee.full_name_en)?.[0]}
           </div>
           <div>
-            <h1 className="text-lg font-bold text-gray-800">{employee.full_name}</h1>
+            <h1 className="text-lg font-bold text-gray-800">{employee.full_name_ar || employee.full_name_en}</h1>
             <p className="text-sm text-gray-500">{employee.employee_number} — {employee.department?.name_ar}</p>
           </div>
         </div>
@@ -80,16 +80,8 @@ export default function EmployeeDetails() {
         <InfoRow label="القسم" value={employee.department?.name_ar} />
         <InfoRow label="المسمى الوظيفي" value={employee.position?.title_ar} />
         <InfoRow label="تاريخ التعيين" value={employee.hire_date} />
-        <InfoRow label="الراتب" value={employee.salary ? `${Number(employee.salary).toLocaleString()} ريال` : null} />
         <InfoRow label="البنك" value={employee.bank_name} />
-        <InfoRow label="IBAN" value={employee.bank_iban} />
-      </div>
-
-      {/* Emergency Contact */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
-        <h2 className="text-base font-semibold text-gray-800 mb-3">جهة الاتصال في حالة الطوارئ</h2>
-        <InfoRow label="الاسم" value={employee.emergency_contact_name} />
-        <InfoRow label="الهاتف" value={employee.emergency_contact_phone} />
+        <InfoRow label="IBAN" value={employee.iban} />
       </div>
 
       {/* Documents */}

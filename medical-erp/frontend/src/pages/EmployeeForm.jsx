@@ -6,7 +6,10 @@ import departmentService from '../services/departmentService';
 
 const initialForm = {
   employee_number: '',
-  full_name: '',
+  first_name_ar: '',
+  second_name_ar: '',
+  third_name_ar: '',
+  last_name_ar: '',
   phone: '',
   email: '',
   national_id: '',
@@ -16,12 +19,9 @@ const initialForm = {
   gender: '',
   nationality: '',
   marital_status: '',
-  salary: '',
   bank_name: '',
-  bank_iban: '',
+  iban: '',
   address: '',
-  emergency_contact_name: '',
-  emergency_contact_phone: '',
 };
 
 export default function EmployeeForm() {
@@ -44,8 +44,11 @@ export default function EmployeeForm() {
           const emp = data.data;
           setForm({
             employee_number: emp.employee_number || '',
-            full_name: emp.full_name || '',
-            phone: emp.user?.phone || '',
+            first_name_ar: emp.first_name_ar || '',
+            second_name_ar: emp.second_name_ar || '',
+            third_name_ar: emp.third_name_ar || '',
+            last_name_ar: emp.last_name_ar || '',
+            phone: emp.phone || '',
             email: emp.email || '',
             national_id: emp.national_id || '',
             department_id: emp.department_id || '',
@@ -54,12 +57,9 @@ export default function EmployeeForm() {
             gender: emp.gender || '',
             nationality: emp.nationality || '',
             marital_status: emp.marital_status || '',
-            salary: emp.salary || '',
             bank_name: emp.bank_name || '',
-            bank_iban: emp.bank_iban || '',
+            iban: emp.iban || '',
             address: emp.address || '',
-            emergency_contact_name: emp.emergency_contact_name || '',
-            emergency_contact_phone: emp.emergency_contact_phone || '',
           });
         })
         .catch(() => {
@@ -126,8 +126,17 @@ export default function EmployeeForm() {
           <Field label="الرقم الوظيفي *" error={errors.employee_number}>
             <input type="text" value={form.employee_number} onChange={(e) => handleChange('employee_number', e.target.value)} required className={inputClass(errors.employee_number)} />
           </Field>
-          <Field label="الاسم الكامل *" error={errors.full_name}>
-            <input type="text" value={form.full_name} onChange={(e) => handleChange('full_name', e.target.value)} required className={inputClass(errors.full_name)} />
+          <Field label="الاسم الأول *" error={errors.first_name_ar}>
+            <input type="text" value={form.first_name_ar} onChange={(e) => handleChange('first_name_ar', e.target.value)} required className={inputClass(errors.first_name_ar)} />
+          </Field>
+          <Field label="الاسم الثاني" error={errors.second_name_ar}>
+            <input type="text" value={form.second_name_ar} onChange={(e) => handleChange('second_name_ar', e.target.value)} className={inputClass(errors.second_name_ar)} />
+          </Field>
+          <Field label="الاسم الثالث" error={errors.third_name_ar}>
+            <input type="text" value={form.third_name_ar} onChange={(e) => handleChange('third_name_ar', e.target.value)} className={inputClass(errors.third_name_ar)} />
+          </Field>
+          <Field label="اسم العائلة *" error={errors.last_name_ar}>
+            <input type="text" value={form.last_name_ar} onChange={(e) => handleChange('last_name_ar', e.target.value)} required className={inputClass(errors.last_name_ar)} />
           </Field>
           <Field label="رقم الهاتف *" error={errors.phone}>
             <input type="tel" value={form.phone} onChange={(e) => handleChange('phone', e.target.value)} required dir="ltr" className={inputClass(errors.phone)} />
@@ -182,9 +191,6 @@ export default function EmployeeForm() {
           <Field label="تاريخ التعيين *" error={errors.hire_date}>
             <input type="date" value={form.hire_date} onChange={(e) => handleChange('hire_date', e.target.value)} required className={inputClass(errors.hire_date)} />
           </Field>
-          <Field label="الراتب" error={errors.salary}>
-            <input type="number" value={form.salary} onChange={(e) => handleChange('salary', e.target.value)} min="0" step="0.01" dir="ltr" className={inputClass(errors.salary)} />
-          </Field>
         </Section>
 
         {/* Bank Info */}
@@ -192,18 +198,8 @@ export default function EmployeeForm() {
           <Field label="اسم البنك" error={errors.bank_name}>
             <input type="text" value={form.bank_name} onChange={(e) => handleChange('bank_name', e.target.value)} className={inputClass(errors.bank_name)} />
           </Field>
-          <Field label="رقم الآيبان (IBAN)" error={errors.bank_iban}>
-            <input type="text" value={form.bank_iban} onChange={(e) => handleChange('bank_iban', e.target.value)} dir="ltr" className={inputClass(errors.bank_iban)} />
-          </Field>
-        </Section>
-
-        {/* Emergency Contact */}
-        <Section title="جهة الاتصال في حالة الطوارئ">
-          <Field label="الاسم" error={errors.emergency_contact_name}>
-            <input type="text" value={form.emergency_contact_name} onChange={(e) => handleChange('emergency_contact_name', e.target.value)} className={inputClass(errors.emergency_contact_name)} />
-          </Field>
-          <Field label="رقم الهاتف" error={errors.emergency_contact_phone}>
-            <input type="tel" value={form.emergency_contact_phone} onChange={(e) => handleChange('emergency_contact_phone', e.target.value)} dir="ltr" className={inputClass(errors.emergency_contact_phone)} />
+          <Field label="رقم الآيبان (IBAN)" error={errors.iban}>
+            <input type="text" value={form.iban} onChange={(e) => handleChange('iban', e.target.value)} dir="ltr" className={inputClass(errors.iban)} />
           </Field>
         </Section>
 

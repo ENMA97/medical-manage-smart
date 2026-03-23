@@ -94,7 +94,7 @@ export default function Resignations() {
               <div key={r.id} className="px-4 py-3 hover:bg-gray-50">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-gray-800 text-sm">{r.employee?.full_name}</p>
+                    <p className="font-medium text-gray-800 text-sm">{r.employee?.full_name_ar || r.employee?.full_name_en}</p>
                     <p className="text-xs text-gray-500 mt-0.5">آخر يوم: {r.requested_last_day}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{r.reason}</p>
                   </div>

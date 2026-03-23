@@ -184,7 +184,7 @@ export default function Contracts() {
               <tbody className="divide-y divide-gray-50">
                 {contracts.map((c) => (
                   <tr key={c.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-800">{c.employee?.full_name}</td>
+                    <td className="px-4 py-3 font-medium text-gray-800">{c.employee?.full_name_ar || c.employee?.full_name_en}</td>
                     <td className="px-4 py-3 text-gray-600 hidden sm:table-cell">{typeLabels[c.type] || typeLabels[c.contract_type] || c.type || c.contract_type}</td>
                     <td className="px-4 py-3 text-gray-600">{c.start_date}</td>
                     <td className="px-4 py-3 text-gray-600">{c.end_date || '—'}</td>
@@ -267,7 +267,7 @@ export default function Contracts() {
       </Modal>
 
       {/* Renew Contract Modal */}
-      <Modal open={!!renewTarget} onClose={() => setRenewTarget(null)} title={`تجديد عقد — ${renewTarget?.employee?.full_name || ''}`} maxWidth="max-w-xl">
+      <Modal open={!!renewTarget} onClose={() => setRenewTarget(null)} title={`تجديد عقد — ${renewTarget?.employee?.full_name_ar || renewTarget?.employee?.full_name_en || ''}`} maxWidth="max-w-xl">
         <form onSubmit={handleRenew} className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Input label="تاريخ البداية الجديد" name="start_date" type="date" required />
