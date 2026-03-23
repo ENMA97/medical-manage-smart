@@ -39,7 +39,7 @@ server {
 
     # Frontend SPA - everything else
     location / {
-        try_files /app\$uri /app\$uri/ /app/index.html;
+        try_files /app\$uri /app\$uri/ /app/index.html =404;
     }
 
     # Block dotfiles
