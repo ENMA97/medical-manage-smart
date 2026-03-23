@@ -40,6 +40,7 @@ server {
     # Frontend SPA - everything else
     location / {
         root /var/www/html/public/app;
+        index index.html;
         try_files \$uri \$uri/ /index.html;
     }
 
