@@ -30,16 +30,17 @@ server {
         fastcgi_buffering off;
     }
 
-    # Frontend static assets
-    location ^~ /app/assets {
-        alias /var/www/html/public/app/assets;
+    # Frontend static assets (with long cache)
+    location ^~ /assets/ {
+        root /var/www/html/public/app;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
 
     # Frontend SPA - everything else
     location / {
-        try_files /app\$uri /app\$uri/ /app/index.html =404;
+        root /var/www/html/public/app;
+        try_files \$uri \$uri/ /index.html;
     }
 
     # Block dotfiles

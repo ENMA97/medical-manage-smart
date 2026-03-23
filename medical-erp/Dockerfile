@@ -137,14 +137,15 @@ server {
         fastcgi_buffering off;
     }
 
-    location ^~ /app/assets {
-        alias /var/www/html/public/app/assets;
+    location ^~ /assets/ {
+        root /var/www/html/public/app;
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
 
     location / {
-        try_files /app\$uri /app\$uri/ /app/index.html =404;
+        root /var/www/html/public/app;
+        try_files \$uri \$uri/ /index.html;
     }
 
     location ~ /\.(?!well-known).* {
