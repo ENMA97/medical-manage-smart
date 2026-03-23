@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HealthController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -12,22 +13,4 @@ Route::get('/', function () {
     return response()->json(['name' => 'ENMA Medical ERP', 'status' => 'running']);
 });
 
-Route::get('/health', function () {
-    $checks = [
-        'status' => 'ok',
-        'timestamp' => now()->toIso8601String(),
-        'services' => [],
-    ];
-
-    // Database
-    try {
-        \Illuminate\Support\Facades\DB::connection()->getPdo();
-        $checks['services']['database'] = 'ok';
-    } catch (\Exception $e) {
-        $checks['services']['database'] = 'error';
-        $checks['status'] = 'degraded';
-    }
-
-    $httpStatus = $checks['status'] === 'ok' ? 200 : 503;
-    return response()->json($checks, $httpStatus);
-});
+Route::get('/health', HealthController::class);
