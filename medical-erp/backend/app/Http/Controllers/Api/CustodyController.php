@@ -104,7 +104,7 @@ class CustodyController extends Controller
 
         $request->validate([
             'condition_on_return' => 'nullable|string',
-            'received_by' => 'nullable|string',
+            'received_by' => 'nullable|uuid|exists:users,id',
             'notes' => 'nullable|string',
         ]);
 

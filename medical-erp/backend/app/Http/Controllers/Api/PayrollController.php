@@ -136,6 +136,9 @@ class PayrollController extends Controller
                     $totalDeductions = $gosiEmployee;
                     $netSalary = $grossSalary - $totalDeductions;
 
+                    // حساب أيام العمل الفعلية للشهر
+                    $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $request->input('month'), $request->input('year'));
+
                     PayrollItem::create([
                         'payroll_id' => $payroll->id,
                         'employee_id' => $employee->id,
@@ -151,8 +154,8 @@ class PayrollController extends Controller
                         'gross_salary' => $grossSalary,
                         'total_deductions' => $totalDeductions,
                         'net_salary' => $netSalary,
-                        'total_working_days' => 30,
-                        'actual_working_days' => 30,
+                        'total_working_days' => $daysInMonth,
+                        'actual_working_days' => $daysInMonth,
                         'bank_name' => $employee->bank_name,
                         'iban' => $employee->iban,
                     ]);
