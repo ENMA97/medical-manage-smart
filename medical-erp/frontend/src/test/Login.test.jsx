@@ -68,7 +68,7 @@ describe('Login Page', () => {
     );
 
     expect(screen.getByText('نظام إدارة الموارد البشرية')).toBeInTheDocument();
-    expect(screen.getByText('المنشأة الطبية الذكية')).toBeInTheDocument();
+    expect(screen.getByText('إنماء')).toBeInTheDocument();
   });
 
   it('submits form with employee number and phone', async () => {

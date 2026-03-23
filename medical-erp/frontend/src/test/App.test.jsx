@@ -17,7 +17,7 @@ vi.mock('../contexts/AuthContext', () => ({
 
 // Mock ProtectedRoute to just redirect
 vi.mock('../components/common/ProtectedRoute', () => ({
-  default: ({ children }) => {
+  default: () => {
     // Simulate redirect to login for unauthenticated
     const { Navigate } = require('react-router-dom');
     return <Navigate to="/login" replace />;

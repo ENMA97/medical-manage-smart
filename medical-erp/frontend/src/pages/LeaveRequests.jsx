@@ -13,8 +13,8 @@ const statusColors = {
 export default function LeaveRequests() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [meta, setMeta] = useState({});
+  const [page, setPage] = useState(1); // eslint-disable-line no-unused-vars
+  const [meta, setMeta] = useState({}); // eslint-disable-line no-unused-vars
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ leave_type_id: '', start_date: '', end_date: '', reason: '' });
   const [saving, setSaving] = useState(false);

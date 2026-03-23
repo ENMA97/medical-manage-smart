@@ -170,8 +170,11 @@ export default function MainLayout() {
     } catch { /* silent */ }
   }, []);
 
-  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
-  useEffect(() => { const t = setInterval(fetchNotifications, 60000); return () => clearInterval(t); }, [fetchNotifications]);
+  useEffect(() => {
+    fetchNotifications();
+    const t = setInterval(fetchNotifications, 60000);
+    return () => clearInterval(t);
+  }, [fetchNotifications]);
 
   async function handleMarkAllRead() {
     try {
