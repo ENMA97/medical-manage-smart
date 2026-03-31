@@ -3,6 +3,7 @@ import { Outlet, useNavigate, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import notificationService from '../services/notificationService';
 import toast from 'react-hot-toast';
+import { isDemoMode } from '../services/demoAuth';
 
 const navItems = [
   {
@@ -162,6 +163,7 @@ export default function MainLayout() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchNotifications = useCallback(async () => {
+    if (isDemoMode()) return; // Skip API calls in demo mode
     try {
       const { data } = await notificationService.getAll({ per_page: 10 });
       const notifData = data.data;
@@ -221,6 +223,12 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-16 md:pb-0" dir="rtl">
+      {/* Demo Mode Banner */}
+      {isDemoMode() && (
+        <div className="bg-amber-500 text-white text-center text-xs py-1.5 px-4 font-medium">
+          وضع تجريبي — البيانات المعروضة للعرض فقط ولن يتم حفظها
+        </div>
+      )}
       {/* ── Top Navbar ── */}
       <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

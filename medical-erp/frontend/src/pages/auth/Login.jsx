@@ -3,6 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
+const TEST_ACCOUNTS = [
+  { label: 'مدير عام', empNum: '1001', phone: '0512345001' },
+  { label: 'مدير موارد بشرية', empNum: '1002', phone: '0512345002' },
+  { label: 'طبيب', empNum: '2001', phone: '0512345003' },
+  { label: 'ممرض', empNum: '3001', phone: '0512345004' },
+];
+
 export default function Login() {
   const [employeeNumber, setEmployeeNumber] = useState('');
   const [phone, setPhone] = useState('');
@@ -29,12 +36,17 @@ export default function Login() {
       } else if (error.request) {
         msg = 'لا يمكن الاتصال بالخادم. تحقق من اتصال الإنترنت.';
       } else {
-        msg = 'حدث خطأ أثناء تسجيل الدخول';
+        msg = error.message || 'حدث خطأ أثناء تسجيل الدخول';
       }
       toast.error(msg);
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function fillTestAccount(empNum, phoneNum) {
+    setEmployeeNumber(empNum);
+    setPhone(phoneNum);
   }
 
   return (
@@ -128,26 +140,21 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Test accounts hint */}
+          {/* Test accounts — clickable to auto-fill */}
           <div className="mt-6 p-4 bg-gray-50 rounded-xl">
-            <p className="text-xs text-gray-500 text-center mb-2">حسابات تجريبية</p>
-            <div className="space-y-1 text-xs text-gray-600">
-              <div className="flex justify-between">
-                <span>مدير عام</span>
-                <span dir="ltr">1001 / 0512345001</span>
-              </div>
-              <div className="flex justify-between">
-                <span>مدير موارد بشرية</span>
-                <span dir="ltr">1002 / 0512345002</span>
-              </div>
-              <div className="flex justify-between">
-                <span>طبيب</span>
-                <span dir="ltr">2001 / 0512345003</span>
-              </div>
-              <div className="flex justify-between">
-                <span>ممرض</span>
-                <span dir="ltr">3001 / 0512345004</span>
-              </div>
+            <p className="text-xs text-gray-500 text-center mb-3">حسابات تجريبية — اضغط للتعبئة التلقائية</p>
+            <div className="space-y-2">
+              {TEST_ACCOUNTS.map((acc) => (
+                <button
+                  key={acc.empNum}
+                  type="button"
+                  onClick={() => fillTestAccount(acc.empNum, acc.phone)}
+                  className="w-full flex justify-between items-center text-xs text-gray-600 hover:bg-teal-50 hover:text-teal-700 rounded-lg px-3 py-2 transition-colors"
+                >
+                  <span className="font-medium">{acc.label}</span>
+                  <span dir="ltr" className="font-mono">{acc.empNum} / {acc.phone}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
