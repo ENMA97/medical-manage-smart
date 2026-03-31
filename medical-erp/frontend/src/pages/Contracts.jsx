@@ -185,7 +185,7 @@ export default function Contracts() {
                 {contracts.map((c) => (
                   <tr key={c.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-800">{c.employee?.full_name_ar || c.employee?.full_name_en}</td>
-                    <td className="px-4 py-3 text-gray-600 hidden sm:table-cell">{typeLabels[c.type] || typeLabels[c.contract_type] || c.type || c.contract_type}</td>
+                    <td className="px-4 py-3 text-gray-600 hidden sm:table-cell">{typeLabels[c.contract_type] || c.contract_type || '—'}</td>
                     <td className="px-4 py-3 text-gray-600">{c.start_date}</td>
                     <td className="px-4 py-3 text-gray-600">{c.end_date || '—'}</td>
                     <td className="px-4 py-3">
@@ -231,7 +231,7 @@ export default function Contracts() {
               <option value="">اختر الموظف</option>
               {employees.map((emp) => (
                 <option key={emp.id} value={emp.id}>
-                  {emp.full_name || `${emp.first_name_ar || emp.first_name} ${emp.last_name_ar || emp.last_name}`} — {emp.employee_number}
+                  {emp.full_name_ar || emp.full_name_en} — {emp.employee_number}
                 </option>
               ))}
             </select>

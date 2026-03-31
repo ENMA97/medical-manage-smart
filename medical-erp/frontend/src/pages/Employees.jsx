@@ -104,7 +104,7 @@ export default function Employees() {
                     <td className="px-4 py-3 font-mono text-gray-500">{emp.employee_number}</td>
                     <td className="px-4 py-3 font-medium text-gray-800">{emp.full_name_ar || emp.full_name_en}</td>
                     <td className="px-4 py-3 text-gray-600 hidden sm:table-cell">{emp.department?.name_ar || '—'}</td>
-                    <td className="px-4 py-3 text-gray-600 hidden md:table-cell" dir="ltr">{emp.user?.phone || '—'}</td>
+                    <td className="px-4 py-3 text-gray-600 hidden md:table-cell" dir="ltr">{emp.phone || '—'}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[emp.status] || 'bg-gray-100 text-gray-600'}`}>
                         {statusLabels[emp.status] || emp.status}

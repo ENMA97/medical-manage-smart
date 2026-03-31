@@ -125,7 +125,7 @@ export default function Loans() {
                   <tr key={loan.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-mono text-gray-700">{loan.loan_number}</td>
                     <td className="px-4 py-3 font-medium text-gray-800">
-                      {loan.employee?.full_name_ar || loan.employee?.full_name_en || loan.employee?.full_name || '—'}
+                      {loan.employee?.full_name_ar || loan.employee?.full_name_en || '—'}
                     </td>
                     <td className="px-4 py-3 text-gray-600 hidden sm:table-cell">
                       {Number(loan.loan_amount).toLocaleString('ar-SA')} ر.س
@@ -167,7 +167,7 @@ export default function Loans() {
               <option value="">اختر الموظف</option>
               {employees.map((emp) => (
                 <option key={emp.id} value={emp.id}>
-                  {emp.full_name || `${emp.first_name_ar || emp.first_name} ${emp.last_name_ar || emp.last_name}`} — {emp.employee_number}
+                  {emp.full_name_ar || emp.full_name_en} — {emp.employee_number}
                 </option>
               ))}
             </select>

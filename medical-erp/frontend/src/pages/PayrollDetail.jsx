@@ -125,7 +125,7 @@ export default function PayrollDetail() {
                 {items.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-3 py-2.5 font-medium text-gray-800">
-                      {item.employee?.full_name || item.employee?.first_name_ar || '—'}
+                      {item.employee?.full_name_ar || item.employee?.full_name_en || '—'}
                     </td>
                     <td className="px-3 py-2.5 text-gray-600 hidden sm:table-cell">{fmt(item.basic_salary)}</td>
                     <td className="px-3 py-2.5 text-gray-600 hidden md:table-cell">{fmt(item.housing_allowance)}</td>
