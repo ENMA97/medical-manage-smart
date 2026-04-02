@@ -2,7 +2,26 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import dashboardService from '../services/dashboardService';
+import { isDemoMode } from '../services/demoAuth';
 import toast from 'react-hot-toast';
+
+const DEMO_SUMMARY = {
+  total_employees: 4,
+  active_employees: 4,
+  total_departments: 6,
+  pending_leaves: 2,
+  active_contracts: 4,
+};
+
+const DEMO_ALERTS = [
+  { id: 1, type: 'info', message: 'وضع تجريبي — البيانات للعرض فقط', created_at: new Date().toISOString() },
+];
+
+const DEMO_LEAVE_STATS = {
+  pending: 2,
+  approved: 5,
+  rejected: 1,
+};
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -13,6 +32,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     async function loadDashboard() {
+      if (isDemoMode()) {
+        setSummary(DEMO_SUMMARY);
+        setAlerts(DEMO_ALERTS);
+        setLeaveStats(DEMO_LEAVE_STATS);
+        setLoading(false);
+        return;
+      }
       try {
         const [summaryRes, alertsRes, leaveRes] = await Promise.allSettled([
           dashboardService.getSummary(),

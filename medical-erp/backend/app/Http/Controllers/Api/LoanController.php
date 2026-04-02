@@ -63,14 +63,14 @@ class LoanController extends Controller
                     'paid_installments' => 0,
                     'remaining_installments' => $totalInstallments,
                     'start_date' => $request->input('start_date'),
-                    'expected_end_date' => now()->parse($request->input('start_date'))->addMonths($totalInstallments),
+                    'expected_end_date' => \Carbon\Carbon::parse($request->input('start_date'))->addMonths($totalInstallments),
                     'reason' => $request->input('reason'),
                     'status' => 'pending',
                 ]);
 
                 // إنشاء جدول الأقساط
                 $remaining = $loanAmount;
-                $startDate = now()->parse($request->input('start_date'));
+                $startDate = \Carbon\Carbon::parse($request->input('start_date'));
 
                 for ($i = 1; $i <= $totalInstallments; $i++) {
                     $amount = ($i === $totalInstallments) ? $remaining : $monthlyDeduction;

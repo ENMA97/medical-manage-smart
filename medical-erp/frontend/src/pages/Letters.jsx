@@ -122,7 +122,7 @@ export default function Letters() {
                   <tr key={letter.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-mono text-gray-700">{letter.letter_number}</td>
                     <td className="px-4 py-3 font-medium text-gray-800">
-                      {letter.employee?.full_name_ar || letter.employee?.full_name_en || letter.employee?.full_name || '—'}
+                      {letter.employee?.full_name_ar || letter.employee?.full_name_en || '—'}
                     </td>
                     <td className="px-4 py-3 text-gray-600 hidden sm:table-cell">{letter.letter_type || '—'}</td>
                     <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{letter.template?.name_ar || '—'}</td>
@@ -157,7 +157,7 @@ export default function Letters() {
               <option value="">اختر الموظف</option>
               {employees.map((emp) => (
                 <option key={emp.id} value={emp.id}>
-                  {emp.full_name || `${emp.first_name_ar || emp.first_name} ${emp.last_name_ar || emp.last_name}`} — {emp.employee_number}
+                  {emp.full_name_ar || emp.full_name_en} — {emp.employee_number}
                 </option>
               ))}
             </select>

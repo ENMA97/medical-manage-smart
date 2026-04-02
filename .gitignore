@@ -1,2 +1,30 @@
+# Environment files
 .env
+*.env.local
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build output
+dist/
 .vite/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Laravel
+medical-erp/backend/storage/logs/*.log
+medical-erp/backend/database/database.sqlite
+medical-erp/backend/bootstrap/cache/*.php
+
+# Frontend
+medical-erp/frontend/dist/
+medical-erp/frontend/node_modules/

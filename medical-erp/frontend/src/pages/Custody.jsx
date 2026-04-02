@@ -57,7 +57,7 @@ export default function Custody() {
               <tbody className="divide-y divide-gray-50">
                 {items.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-800">{item.employee?.full_name}</td>
+                    <td className="px-4 py-3 font-medium text-gray-800">{item.employee?.full_name_ar || item.employee?.full_name_en}</td>
                     <td className="px-4 py-3 text-gray-600">{item.item_name}</td>
                     <td className="px-4 py-3 text-gray-600 hidden sm:table-cell">{typeLabels[item.item_type] || item.item_type}</td>
                     <td className="px-4 py-3">

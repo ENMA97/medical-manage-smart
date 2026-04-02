@@ -89,15 +89,17 @@ class LeaveRequestController extends Controller
                 $data['leave_balance_id'] = $balance->id;
             }
 
-            DB::transaction(function () use ($data, $balance) {
+            $leaveRequest = DB::transaction(function () use ($data, $balance) {
+                $leaveRequest = LeaveRequest::create($data);
+
                 // تحديث الرصيد المعلق
                 if ($balance) {
                     $balance->increment('pending', $data['total_days']);
                     $balance->decrement('remaining', $data['total_days']);
                 }
-            });
 
-            $leaveRequest = LeaveRequest::create($data);
+                return $leaveRequest;
+            });
             $leaveRequest->load(['employee', 'leaveType']);
 
             return response()->json([

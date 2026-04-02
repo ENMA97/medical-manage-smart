@@ -36,7 +36,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Don't redirect to login for demo mode tokens
+    const token = localStorage.getItem('auth_token');
+    const isDemo = token && token.startsWith('demo-token-');
+
+    if (error.response?.status === 401 && !isDemo) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
       window.location.href = '/login';

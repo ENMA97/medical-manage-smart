@@ -48,14 +48,14 @@ export default function Reports() {
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: 'إجمالي الموظفين', value: stats.total_employees ?? '-', color: 'blue' },
-            { label: 'الموظفين النشطين', value: stats.active_employees ?? '-', color: 'green' },
-            { label: 'إجازات قيد الانتظار', value: stats.pending_leaves ?? '-', color: 'yellow' },
-            { label: 'عقود منتهية قريباً', value: stats.expiring_contracts ?? '-', color: 'red' },
+            { label: 'إجمالي الموظفين', value: stats.total_employees ?? '-', colorClass: 'text-blue-600' },
+            { label: 'الموظفين النشطين', value: stats.active_employees ?? '-', colorClass: 'text-green-600' },
+            { label: 'إجازات قيد الانتظار', value: stats.pending_leaves ?? '-', colorClass: 'text-yellow-600' },
+            { label: 'عقود منتهية قريباً', value: stats.expiring_contracts ?? '-', colorClass: 'text-red-600' },
           ].map((stat, i) => (
             <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
               <p className="text-xs text-gray-500 mb-1">{stat.label}</p>
-              <p className={`text-2xl font-bold text-${stat.color}-600`}>{stat.value}</p>
+              <p className={`text-2xl font-bold ${stat.colorClass}`}>{stat.value}</p>
             </div>
           ))}
         </div>

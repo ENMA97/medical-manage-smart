@@ -18,6 +18,8 @@ class Employee extends Model
     protected $keyType = 'string';
     public $incrementing = false;
 
+    protected $appends = ['full_name_en', 'full_name_ar'];
+
     protected $fillable = [
         'employee_number',
         'department_id',

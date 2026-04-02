@@ -8,7 +8,7 @@ const localStorageMock = {
   removeItem: vi.fn((key) => { delete localStorageMock.store[key]; }),
   clear: vi.fn(() => { localStorageMock.store = {}; }),
 };
-Object.defineProperty(global, 'localStorage', { value: localStorageMock });
+Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });
 
 // Mock import.meta.env
 vi.stubEnv('VITE_API_URL', '/api');

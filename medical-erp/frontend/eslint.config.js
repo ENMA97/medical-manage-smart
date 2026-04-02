@@ -24,6 +24,17 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      'react-hooks/set-state-in-effect': 'off',
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true, allowExportNames: ['useAuth'] }],
+    },
+  },
+  {
+    files: ['vite.config.*', 'src/test/**'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        globalThis: 'readonly',
+      },
     },
   },
 ])
