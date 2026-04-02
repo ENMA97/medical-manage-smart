@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { render, screen, } from '@testing-library/react';
+import { MemoryRouter, Navigate } from 'react-router-dom';
 import NotFound from '../pages/NotFound';
 
 // Mock AuthContext
@@ -17,11 +17,7 @@ vi.mock('../contexts/AuthContext', () => ({
 
 // Mock ProtectedRoute to just redirect
 vi.mock('../components/common/ProtectedRoute', () => ({
-  default: () => {
-    // Simulate redirect to login for unauthenticated
-    const { Navigate } = require('react-router-dom');
-    return <Navigate to="/login" replace />;
-  },
+  default: () => <Navigate to="/login" replace />,
 }));
 
 describe('NotFound Page (standalone)', () => {

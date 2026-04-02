@@ -56,7 +56,7 @@ describe('Login Page', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('حسابات تجريبية')).toBeInTheDocument();
+    expect(screen.getByText(/حسابات تجريبية/)).toBeInTheDocument();
     expect(screen.getByText('مدير عام')).toBeInTheDocument();
   });
 

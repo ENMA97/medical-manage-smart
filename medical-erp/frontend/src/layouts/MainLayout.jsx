@@ -173,7 +173,7 @@ export default function MainLayout() {
   }, []);
 
   useEffect(() => {
-    fetchNotifications();
+    void fetchNotifications();
     const t = setInterval(fetchNotifications, 60000);
     return () => clearInterval(t);
   }, [fetchNotifications]);
