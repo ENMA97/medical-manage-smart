@@ -153,6 +153,36 @@ class Employee extends Model
         return $this->hasMany(PayrollItem::class);
     }
 
+    public function attendanceRecords(): HasMany
+    {
+        return $this->hasMany(AttendanceRecord::class);
+    }
+
+    public function appraisals(): HasMany
+    {
+        return $this->hasMany(EmployeeAppraisal::class);
+    }
+
+    public function goals(): HasMany
+    {
+        return $this->hasMany(EmployeeGoal::class);
+    }
+
+    public function trainingEnrollments(): HasMany
+    {
+        return $this->hasMany(TrainingEnrollment::class);
+    }
+
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(EmployeeCertificate::class);
+    }
+
+    public function skills(): HasMany
+    {
+        return $this->hasMany(EmployeeSkill::class);
+    }
+
     // ─── Scopes ───
 
     public function scopeActive($query)

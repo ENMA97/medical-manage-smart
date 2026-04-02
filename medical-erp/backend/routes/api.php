@@ -17,6 +17,10 @@ use App\Http\Controllers\Api\ResignationController;
 use App\Http\Controllers\Api\DisciplinaryController;
 use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\AiInsightsController;
+use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\PerformanceController;
+use App\Http\Controllers\Api\RecruitmentController;
+use App\Http\Controllers\Api\TrainingController;
 use App\Http\Controllers\Api\SystemSettingController;
 use Illuminate\Support\Facades\Route;
 
@@ -157,6 +161,108 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         Route::prefix('settings')->group(function () {
             Route::get('/', [SystemSettingController::class, 'index']);
             Route::put('/{setting}', [SystemSettingController::class, 'update']);
+        });
+
+        // ── Attendance & Time Tracking (الحضور والانصراف) ──
+        Route::prefix('attendance')->group(function () {
+            // الورديات
+            Route::get('/shifts', [AttendanceController::class, 'shifts']);
+            Route::post('/shifts', [AttendanceController::class, 'storeShift']);
+            // جداول الدوام
+            Route::get('/schedules', [AttendanceController::class, 'schedules']);
+            Route::post('/schedules', [AttendanceController::class, 'storeSchedule']);
+            Route::post('/employee-schedules', [AttendanceController::class, 'assignSchedule']);
+            // سجلات الحضور
+            Route::get('/records', [AttendanceController::class, 'records']);
+            Route::post('/check-in', [AttendanceController::class, 'checkIn']);
+            Route::post('/check-out', [AttendanceController::class, 'checkOut']);
+            Route::put('/records/{record}/adjust', [AttendanceController::class, 'adjustRecord']);
+            // العمل الإضافي
+            Route::get('/overtime', [AttendanceController::class, 'overtimeRequests']);
+            Route::post('/overtime', [AttendanceController::class, 'storeOvertime']);
+            Route::post('/overtime/{overtime}/approve', [AttendanceController::class, 'approveOvertime']);
+            Route::post('/overtime/{overtime}/reject', [AttendanceController::class, 'rejectOvertime']);
+            // الأذونات
+            Route::get('/permissions', [AttendanceController::class, 'permissionRequests']);
+            Route::post('/permissions', [AttendanceController::class, 'storePermission']);
+            Route::post('/permissions/{permission}/approve', [AttendanceController::class, 'approvePermission']);
+            // ملخصات الحضور
+            Route::get('/summaries', [AttendanceController::class, 'summaries']);
+            Route::post('/summaries/generate', [AttendanceController::class, 'generateSummary']);
+        });
+
+        // ── Performance Appraisal (تقييم الأداء) ──
+        Route::prefix('performance')->group(function () {
+            // دورات التقييم
+            Route::get('/cycles', [PerformanceController::class, 'cycles']);
+            Route::post('/cycles', [PerformanceController::class, 'storeCycle']);
+            Route::get('/cycles/{cycle}', [PerformanceController::class, 'showCycle']);
+            Route::put('/cycles/{cycle}', [PerformanceController::class, 'updateCycle']);
+            // نماذج التقييم
+            Route::get('/templates', [PerformanceController::class, 'templates']);
+            Route::post('/templates', [PerformanceController::class, 'storeTemplate']);
+            // تقييمات الموظفين
+            Route::get('/appraisals', [PerformanceController::class, 'appraisals']);
+            Route::post('/appraisals', [PerformanceController::class, 'storeAppraisal']);
+            Route::get('/appraisals/{appraisal}', [PerformanceController::class, 'showAppraisal']);
+            Route::put('/appraisals/{appraisal}/scores', [PerformanceController::class, 'updateScores']);
+            Route::post('/appraisals/{appraisal}/complete', [PerformanceController::class, 'completeAppraisal']);
+            // أهداف الموظفين
+            Route::get('/goals', [PerformanceController::class, 'goals']);
+            Route::post('/goals', [PerformanceController::class, 'storeGoal']);
+            Route::put('/goals/{goal}', [PerformanceController::class, 'updateGoal']);
+        });
+
+        // ── Training & Development (التدريب والتطوير) ──
+        Route::prefix('training')->group(function () {
+            // البرامج التدريبية
+            Route::get('/programs', [TrainingController::class, 'programs']);
+            Route::post('/programs', [TrainingController::class, 'storeProgram']);
+            Route::get('/programs/{program}', [TrainingController::class, 'showProgram']);
+            // الدورات التدريبية
+            Route::get('/courses', [TrainingController::class, 'courses']);
+            Route::post('/courses', [TrainingController::class, 'storeCourse']);
+            Route::get('/courses/{course}', [TrainingController::class, 'showCourse']);
+            Route::post('/courses/{course}/enroll', [TrainingController::class, 'enroll']);
+            // تسجيل الموظفين
+            Route::put('/enrollments/{enrollment}', [TrainingController::class, 'updateEnrollment']);
+            // الشهادات
+            Route::get('/certificates', [TrainingController::class, 'certificates']);
+            Route::post('/certificates', [TrainingController::class, 'storeCertificate']);
+            // المهارات
+            Route::get('/skill-categories', [TrainingController::class, 'skillCategories']);
+            Route::get('/skills', [TrainingController::class, 'skills']);
+            Route::post('/skills', [TrainingController::class, 'storeSkill']);
+        });
+
+        // ── Recruitment (التوظيف والاستقطاب) ──
+        Route::prefix('recruitment')->group(function () {
+            // طلبات التوظيف
+            Route::get('/requisitions', [RecruitmentController::class, 'requisitions']);
+            Route::post('/requisitions', [RecruitmentController::class, 'storeRequisition']);
+            Route::get('/requisitions/{requisition}', [RecruitmentController::class, 'showRequisition']);
+            Route::post('/requisitions/{requisition}/approve', [RecruitmentController::class, 'approveRequisition']);
+            // الإعلانات الوظيفية
+            Route::get('/postings', [RecruitmentController::class, 'postings']);
+            Route::post('/postings', [RecruitmentController::class, 'storePosting']);
+            Route::post('/postings/{posting}/publish', [RecruitmentController::class, 'publishPosting']);
+            // المرشحون
+            Route::get('/candidates', [RecruitmentController::class, 'candidates']);
+            Route::post('/candidates', [RecruitmentController::class, 'storeCandidate']);
+            Route::get('/candidates/{candidate}', [RecruitmentController::class, 'showCandidate']);
+            // طلبات التقديم
+            Route::get('/applications', [RecruitmentController::class, 'applications']);
+            Route::post('/applications', [RecruitmentController::class, 'storeApplication']);
+            Route::put('/applications/{application}/status', [RecruitmentController::class, 'updateApplicationStatus']);
+            // المقابلات
+            Route::get('/interviews', [RecruitmentController::class, 'interviews']);
+            Route::post('/interviews', [RecruitmentController::class, 'storeInterview']);
+            Route::put('/interviews/{interview}/feedback', [RecruitmentController::class, 'interviewFeedback']);
+            // عروض العمل
+            Route::post('/offers', [RecruitmentController::class, 'storeOffer']);
+            Route::post('/offers/{offer}/approve', [RecruitmentController::class, 'approveOffer']);
+            Route::post('/offers/{offer}/send', [RecruitmentController::class, 'sendOffer']);
+            Route::post('/offers/{offer}/respond', [RecruitmentController::class, 'respondOffer']);
         });
     });
 });
