@@ -33,8 +33,6 @@ export default function Login() {
           error.response.data?.errors?.employee_number?.[0] ||
           error.response.data?.errors?.phone?.[0] ||
           `خطأ من الخادم (${error.response.status})`;
-      } else if (error.request) {
-        msg = 'لا يمكن الاتصال بالخادم. تحقق من اتصال الإنترنت.';
       } else {
         msg = error.message || 'حدث خطأ أثناء تسجيل الدخول';
       }

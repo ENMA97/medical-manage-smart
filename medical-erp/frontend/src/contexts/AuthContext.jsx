@@ -60,14 +60,17 @@ export function AuthProvider({ children }) {
 
       return data;
     } catch (apiError) {
-      // If backend is unreachable (network error, 404, 502, etc.), try demo login
-      const isServerUnreachable =
-        !apiError.response ||
-        apiError.response.status === 502 ||
-        apiError.response.status === 503 ||
-        apiError.response.status === 0;
+      // If backend returned a clear validation error, re-throw immediately
+      const status = apiError.response?.status;
+      const isValidationError = status === 422 || status === 429 || status === 401;
 
-      if (isServerUnreachable) {
+      if (isValidationError) {
+        throw apiError;
+      }
+
+      // For any other failure (network error, 404, 500, 502, 503, 504, etc.)
+      // fall back to demo login so the app remains usable without a backend
+      try {
         const result = demoLogin(employeeNumber, phone);
 
         if (result.success) {
@@ -85,10 +88,14 @@ export function AuthProvider({ children }) {
           data: { message: result.message },
         };
         throw demoError;
+      } catch (demoError) {
+        // If demoError has a response (we created it above), throw it
+        if (demoError.response) {
+          throw demoError;
+        }
+        // Otherwise unexpected error in demo login — throw original API error
+        throw apiError;
       }
-
-      // Backend returned a real error (422 validation, 429 rate limit, etc.) — re-throw
-      throw apiError;
     }
   }
 
