@@ -4,5 +4,8 @@ dockerContext = "."
 
 [deploy]
 healthcheckPath = "/health"
+healthcheckTimeout = 10
+startCommand = "/start.sh"
 restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 3
+restartPolicyMaxRetries = 5
+numReplicas = 1

@@ -162,12 +162,20 @@ APP_ENV=${APP_ENV:-production}
 APP_DEBUG=${APP_DEBUG:-false}
 APP_URL=${APP_URL:-http://localhost}
 APP_KEY=${APP_KEY:-}
-DB_CONNECTION=${DB_CONNECTION:-sqlite}
-DB_DATABASE=${DB_DATABASE:-/var/www/html/database/database.sqlite}
-SESSION_DRIVER=file
-CACHE_STORE=file
-QUEUE_CONNECTION=sync
-CORS_ALLOWED_ORIGINS=*
+DB_CONNECTION=${DB_CONNECTION:-pgsql}
+DATABASE_URL=${DATABASE_URL:-}
+DB_HOST=${DB_HOST:-}
+DB_PORT=${DB_PORT:-5432}
+DB_DATABASE=${DB_DATABASE:-railway}
+DB_USERNAME=${DB_USERNAME:-}
+DB_PASSWORD=${DB_PASSWORD:-}
+SESSION_DRIVER=${SESSION_DRIVER:-file}
+CACHE_STORE=${CACHE_STORE:-file}
+QUEUE_CONNECTION=${QUEUE_CONNECTION:-sync}
+CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-*}
+LOG_CHANNEL=stack
+LOG_STACK=stderr
+LOG_LEVEL=${LOG_LEVEL:-warning}
 ENVEOF
 fi
 
@@ -175,9 +183,17 @@ if [ -z "${APP_KEY}" ]; then
     php artisan key:generate --force 2>&1 || true
 fi
 
-touch /var/www/html/database/database.sqlite 2>/dev/null || true
-chown www-data:www-data /var/www/html/database/database.sqlite 2>/dev/null || true
-chmod 664 /var/www/html/database/database.sqlite 2>/dev/null || true
+# SQLite fallback for local development
+if [ "${DB_CONNECTION}" = "sqlite" ] || ([ -z "${DATABASE_URL}" ] && [ -z "${DB_HOST}" ]); then
+    echo "=== No PostgreSQL configured, falling back to SQLite ==="
+    sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' /var/www/html/.env
+    sed -i 's|^DB_DATABASE=.*|DB_DATABASE=/var/www/html/database/database.sqlite|' /var/www/html/.env
+    touch /var/www/html/database/database.sqlite 2>/dev/null || true
+    chown www-data:www-data /var/www/html/database/database.sqlite 2>/dev/null || true
+    chmod 664 /var/www/html/database/database.sqlite 2>/dev/null || true
+else
+    echo "=== Using PostgreSQL database ==="
+fi
 
 php artisan config:cache 2>&1 || true
 php artisan route:cache 2>&1 || true
