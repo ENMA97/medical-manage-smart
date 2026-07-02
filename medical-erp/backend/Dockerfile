@@ -11,9 +11,13 @@ RUN apk add --no-cache \
     icu-dev \
     oniguruma-dev \
     sqlite-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
     curl \
     && apk add --no-cache --virtual .phpize-deps $PHPIZE_DEPS \
-    && docker-php-ext-install pdo pdo_pgsql pgsql pdo_sqlite zip intl mbstring bcmath opcache \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_pgsql pgsql pdo_sqlite zip intl mbstring bcmath opcache gd \
     && pecl install redis && docker-php-ext-enable redis \
     && apk del .phpize-deps \
     && rm -rf /tmp/pear
