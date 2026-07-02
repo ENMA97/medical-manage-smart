@@ -12,8 +12,10 @@ RUN apk add --no-cache \
     oniguruma-dev \
     sqlite-dev \
     curl \
+    && apk add --no-cache --virtual .phpize-deps $PHPIZE_DEPS \
     && docker-php-ext-install pdo pdo_pgsql pgsql pdo_sqlite zip intl mbstring bcmath opcache \
     && pecl install redis && docker-php-ext-enable redis \
+    && apk del .phpize-deps \
     && rm -rf /tmp/pear
 
 # OPcache production settings
