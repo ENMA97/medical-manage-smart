@@ -2,7 +2,8 @@ name: Deploy Frontend Preview to GitHub Pages
 
 on:
   push:
-    branches: [main, master]
+    # فرع الـ PR مضاف مؤقتاً لنشر نسخة تجريبية — يُزال بعد الدمج
+    branches: [main, master, claude/project-proposal-implementation-tbvtt6]
   workflow_dispatch:
 
 permissions:
