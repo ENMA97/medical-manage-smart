@@ -10,9 +10,14 @@ class AttendanceRecordFactory extends Factory
 {
     protected $model = AttendanceRecord::class;
 
+    /**
+     * عدّاد تسلسلي يضمن تاريخاً مختلفاً لكل سجل (قيد فريد لكل موظف/يوم)
+     */
+    private static int $daySequence = 0;
+
     public function definition(): array
     {
-        $date = $this->faker->unique()->dateTimeBetween('-1 month', 'now')->format('Y-m-d');
+        $date = now()->subDays(self::$daySequence++)->toDateString();
 
         return [
             'employee_id' => Employee::factory(),
