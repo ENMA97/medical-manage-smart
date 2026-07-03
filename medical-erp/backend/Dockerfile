@@ -3,7 +3,7 @@
 # ══════════════════════════════════════════════
 
 # ── Base Stage ──
-FROM php:8.3-fpm-alpine AS base
+FROM php:8.4-fpm-alpine AS base
 
 RUN apk add --no-cache \
     postgresql-dev \
@@ -11,9 +11,15 @@ RUN apk add --no-cache \
     icu-dev \
     oniguruma-dev \
     sqlite-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
     curl \
-    && docker-php-ext-install pdo pdo_pgsql pgsql pdo_sqlite zip intl mbstring bcmath opcache \
+    && apk add --no-cache --virtual .phpize-deps $PHPIZE_DEPS \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_pgsql pgsql pdo_sqlite zip intl mbstring bcmath opcache gd \
     && pecl install redis && docker-php-ext-enable redis \
+    && apk del .phpize-deps \
     && rm -rf /tmp/pear
 
 # OPcache production settings

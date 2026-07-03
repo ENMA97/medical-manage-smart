@@ -66,7 +66,7 @@ class PayrollController extends Controller
                     '0',
                     STR_PAD_LEFT
                 ) . '-' . str_pad(
-                    Payroll::withTrashed()->count() + 1,
+                    Payroll::count() + 1,
                     4,
                     '0',
                     STR_PAD_LEFT

@@ -153,6 +153,29 @@ class Employee extends Model
         return $this->hasMany(PayrollItem::class);
     }
 
+    public function shiftAssignments(): HasMany
+    {
+        return $this->hasMany(ShiftAssignment::class);
+    }
+
+    public function attendanceRecords(): HasMany
+    {
+        return $this->hasMany(AttendanceRecord::class);
+    }
+
+    /**
+     * الوردية السارية للموظف في تاريخ معين
+     */
+    public function currentShift(?string $date = null): ?Shift
+    {
+        $date = $date ?: now()->toDateString();
+
+        return $this->shiftAssignments()
+            ->activeOn($date)
+            ->orderByDesc('effective_from')
+            ->first()?->shift;
+    }
+
     // ─── Scopes ───
 
     public function scopeActive($query)

@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             FoundationSeeder::class,
             ViolationTypesSeeder::class,
+            ShiftSeeder::class,
             DemoDataSeeder::class,
         ]);
     }

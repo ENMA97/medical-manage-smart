@@ -21,7 +21,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
           extensions: pdo_sqlite, pdo_pgsql, zip, intl, mbstring, bcmath, redis
           coverage: none
 
@@ -42,7 +42,7 @@ jobs:
         run: php artisan key:generate
 
       - name: Run tests
-        run: php artisan test --parallel
+        run: php artisan test
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: ":memory:"

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\CustodyController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Api\LoanController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PayrollController;
 use App\Http\Controllers\Api\ResignationController;
+use App\Http\Controllers\Api\ShiftController;
 use App\Http\Controllers\Api\DisciplinaryController;
 use App\Http\Controllers\Api\PositionController;
 use App\Http\Controllers\Api\AiInsightsController;
@@ -70,6 +72,13 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::get('leave-requests/{leaveRequest}', [LeaveRequestController::class, 'show']);
     Route::post('leave-requests/{leaveRequest}/cancel', [LeaveRequestController::class, 'cancel']);
 
+    // ── Attendance — تسجيل ذاتي (جميع المستخدمين) ──
+    Route::prefix('attendance')->group(function () {
+        Route::post('/check-in', [AttendanceController::class, 'checkIn']);
+        Route::post('/check-out', [AttendanceController::class, 'checkOut']);
+        Route::get('/my', [AttendanceController::class, 'my']);
+    });
+
     // ── Resignations — تقديم (جميع المستخدمين) ──
     Route::get('resignations', [ResignationController::class, 'index']);
     Route::post('resignations', [ResignationController::class, 'store']);
@@ -104,6 +113,17 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
         // ── Leave Approval (قبول/رفض) ──
         Route::post('leave-requests/{leaveRequest}/approve', [LeaveRequestController::class, 'approve']);
         Route::post('leave-requests/{leaveRequest}/reject', [LeaveRequestController::class, 'reject']);
+
+        // ── Shifts & Attendance (الورديات والحضور) ──
+        Route::apiResource('shifts', ShiftController::class);
+        Route::post('shifts/{shift}/assign', [ShiftController::class, 'assign']);
+        Route::get('shift-assignments', [ShiftController::class, 'assignments']);
+        Route::delete('shift-assignments/{assignment}', [ShiftController::class, 'unassign']);
+        Route::get('attendance/daily-summary', [AttendanceController::class, 'dailySummary']);
+        Route::get('attendance/monthly-report', [AttendanceController::class, 'monthlyReport']);
+        Route::get('attendance', [AttendanceController::class, 'index']);
+        Route::post('attendance', [AttendanceController::class, 'store']);
+        Route::put('attendance/{attendance}', [AttendanceController::class, 'update']);
 
         // ── Payroll ──
         Route::apiResource('payrolls', PayrollController::class)->only(['index', 'store', 'show']);

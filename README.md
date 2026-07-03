@@ -14,6 +14,8 @@
 
 - Employee management with full CRUD
 - Contract management with alerts and renewals
+- Attendance tracking with self check-in/out, late & overtime calculation
+- Shift management with employee assignments (morning/evening/night rotas)
 - Leave management with approval workflows
 - Payroll processing and salary management
 - Loan management with installment tracking
