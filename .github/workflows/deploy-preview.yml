@@ -34,6 +34,11 @@ jobs:
         working-directory: medical-erp/frontend
         run: npx vite build --base /medical-manage-smart/
 
+      # GitHub Pages SPA fallback: serve the app for deep links like /attendance
+      - name: Copy index.html to 404.html
+        working-directory: medical-erp/frontend
+        run: cp dist/index.html dist/404.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
